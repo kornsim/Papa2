@@ -1,392 +1,1059 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz App ป.3 - ครบทุกวิชา</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Mali:wght@400;600;700&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Mali', cursive; background-color: #f0fdf4; }
-        .btn-3d { transition: all 0.1s; box-shadow: 0 6px 0 rgba(0,0,0,0.2); }
-        .btn-3d:active { transform: translateY(6px); box-shadow: 0 0px 0 rgba(0,0,0,0.2); }
-        .btn-3d:disabled { opacity: 0.5; pointer-events: none; transform: translateY(6px); box-shadow: 0 0px 0 rgba(0,0,0,0.2); }
-        .btn-subject { transition: all 0.1s; box-shadow: 0 6px 0 #d97706; }
-        .btn-subject:active { transform: translateY(6px); box-shadow: 0 0px 0 #d97706; }
-        .btn-choice { transition: all 0.1s; box-shadow: 0 6px 0 #1e40af; }
-        .btn-choice:active { transform: translateY(6px); box-shadow: 0 0px 0 #1e40af; }
-        .btn-choice.disabled { pointer-events: none; box-shadow: 0 0px 0 #1e40af; transform: translateY(6px); }
-        input:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3); }
-        .leaderboard-item:nth-child(1) .rank-badge { background-color: #fbbf24; color: #fff; } 
-        .leaderboard-item:nth-child(2) .rank-badge { background-color: #9ca3af; color: #fff; } 
-        .leaderboard-item:nth-child(3) .rank-badge { background-color: #b45309; color: #fff; } 
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#6d5dfc">
+<title>Quiz Adventure ป.1–ป.6</title>
+<style>
+:root{--accent:#6d5dfc;--bg:#f6f7fb;--card:#fff;--text:#1d2330;--muted:#6d7482;--border:#e4e7ef;--good:#178a55;--bad:#c93c4f}
+*{box-sizing:border-box} body{margin:0;background:linear-gradient(180deg,#f7f8ff,#eef7ff);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--text)}
+main{max-width:760px;margin:auto;padding:18px} .screen{display:none} .screen.active{display:block}
+.hero,.card{background:var(--card);border:1px solid var(--border);border-radius:24px;box-shadow:0 8px 30px rgba(30,35,60,.06)}
+.hero{padding:24px} .center{text-align:center} .logo{font-size:56px} h1{font-size:clamp(30px,8vw,46px);margin:4px 0;font-weight:900} h2{margin:0 0 8px} .muted{color:var(--muted)}
+.btn{min-height:48px;border-radius:14px;border:1px solid var(--border);background:#fff;color:var(--text);font-size:16px;font-weight:800;padding:10px 16px;cursor:pointer} .primary{background:var(--accent);color:#fff;border-color:var(--accent)} .wide{width:100%;margin-top:10px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px} .grid.two{grid-template-columns:repeat(2,1fr)}
+.tile{padding:17px 10px;text-align:center;min-height:105px} .tile .emoji{display:block;font-size:30px;margin-bottom:7px}
+.field{margin:12px 0} label{display:block;font-weight:800;margin-bottom:6px} input,select{width:100%;min-height:48px;border:1px solid var(--border);border-radius:12px;padding:10px 12px;font-size:16px;background:#fff}
+.top{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:14px} .pill{border:1px solid var(--border);padding:7px 10px;border-radius:99px;font-size:13px;font-weight:800;background:#fff}
+.progress{height:9px;background:#edf0f6;border-radius:99px;overflow:hidden;margin:12px 0 20px} .bar{height:100%;background:var(--accent);width:0;transition:.2s}
+.question{font-size:22px;font-weight:850;line-height:1.45;margin:10px 0 16px} .option{width:100%;text-align:left;margin:6px 0;min-height:56px} .option.selected{outline:3px solid #d7d2ff;background:#f6f4ff}
+.option.correct{border-color:var(--good);background:#effaf4} .option.wrong{border-color:var(--bad);background:#fff1f3}
+.feedback{padding:12px;border-radius:12px;background:#f7f8fb;margin-top:12px;display:none} .feedback.show{display:block}
+.score{font-size:52px;font-weight:950;text-align:center} .statgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:15px 0} .stat{padding:14px;border:1px solid var(--border);border-radius:15px;text-align:center;background:#f9fafc} .stat strong{display:block;font-size:25px}
+.small{font-size:13px;color:var(--muted)} .hidden{display:none!important}
+@media(max-width:520px){main{padding:12px}.hero{padding:18px;border-radius:20px}.grid{grid-template-columns:1fr 1fr}.grid .full-mobile{grid-column:1/-1}.question{font-size:20px}}
+</style>
+
+<style id="source-library-style">
+/* SOURCE_LIBRARY_CSS */
+.upload-box{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0}
+.upload-box input[type=file]{max-width:100%;padding:10px;border:1px dashed #bbb;border-radius:12px;background:#fafafa}
+.hint,.muted{font-size:13px;line-height:1.55;color:#666}
+.source-list{margin-top:14px;display:grid;gap:10px}
+.source-item{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:12px;border:1px solid #eee;border-radius:14px;background:#fff}
+.source-name{font-weight:700;word-break:break-word}
+.source-meta{font-size:12px;color:#777;margin-top:3px}
+.source-actions{display:flex;gap:6px;flex-shrink:0}
+.source-actions button{padding:7px 10px;border:0;border-radius:9px;cursor:pointer}
+.source-empty{padding:14px;border-radius:12px;background:#f7f7f7;color:#777;text-align:center}
+.source-home-card{margin-top:18px;text-align:left}.source-home-card .section-title{font-weight:800;font-size:17px;margin-bottom:6px}
+
+.navbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.navbar .btn{flex:1;min-width:110px}.timer{font-size:20px;font-weight:900;padding:7px 12px;border-radius:12px;background:#fff3cd;color:#7a5200;border:1px solid #ffe08a}.timer.danger{background:#ffe1e1;color:#a40000;border-color:#ffaaaa}
+</style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4">
+<body>
+<main>
+<section id="home" class="screen active">
+<div class="hero center">
+<div class="logo">🎓✨</div><h1>Quiz Adventure</h1>
+<p class="muted">เกมฝึกทำข้อสอบสำหรับเด็ก อ.1 – ป.6</p>
+<button class="btn primary wide" onclick="go('register')">📝 ลงทะเบียน / เริ่มใช้งาน</button>
+<button class="btn wide" onclick="go('login')">🔐 เข้าสู่ระบบ</button>
+<div class="grid">
+<div class="card tile"><span class="emoji">📚</span><b>9 วิชา</b><div class="small">ไทย · คณิต · อังกฤษ และวิชาอื่น ๆ</div></div>
+<div class="card tile"><span class="emoji">🏆</span><b>9 ระดับ</b><div class="small">อ.1 – ป.6</div></div>
+<div class="card tile full-mobile"><span class="emoji">📈</span><b>เก็บสถิติ</b><div class="small">ติดตามพัฒนาการ</div></div>
+</div>
+</div>
 
-    <!-- 1. หน้าล็อคอิน -->
-    <div id="login-screen" class="w-full max-w-md bg-white rounded-3xl shadow-xl p-8 border-4 border-blue-400 text-center">
-        <h1 class="text-6xl mb-4">🦁</h1>
-        <h2 class="text-3xl font-bold text-blue-600 mb-2">ยินดีต้อนรับคนเก่ง!</h2>
-        <p class="text-gray-500 mb-8">เข้าสู่ระบบเพื่อเริ่มทำแบบฝึกหัด</p>
+<!-- SOURCE_LIBRARY_START -->
+<section class="card source-home-card" id="sourceLibraryCard">
+  <div class="section-title">📚 ฐานเอกสารตัวอย่างข้อสอบ</div>
+  <p class="muted">อัปโหลดเอกสารตัวอย่างข้อสอบ/บทเรียน เพื่อเก็บเป็นแหล่งข้อมูลสำหรับสร้างแบบฝึกหัดในขั้นต่อไป</p>
+  <div class="upload-box">
+    <input id="sourceFileInput" type="file"
+      accept=".pdf,.doc,.docx,.txt,.csv,.json,.xlsx,.xls"
+      multiple />
+    <button class="primary" type="button" onclick="uploadSourceFiles()">⬆️ Upload เอกสาร</button>
+  </div>
+  <div class="hint">
+    รองรับการเก็บไฟล์ PDF, Word, Excel, CSV, TXT และ JSON ในเครื่องนี้
+    <br>ไฟล์ PDF/Word/Excel จะถูกเก็บไว้เป็น “ต้นฉบับ” ก่อน และสามารถต่อยอดระบบอ่านเนื้อหาอัตโนมัติได้
+  </div>
+  <div id="sourceLibraryList" class="source-list"></div>
+</section>
+<!-- SOURCE_LIBRARY_END -->
+</section>
 
-        <div class="mb-4 text-left">
-            <label class="block text-gray-700 font-bold mb-2 ml-2">ชื่อผู้ใช้งาน</label>
-            <input type="text" id="username" placeholder="พิมพ์ชื่อตรงนี้เลยจ้า..." class="w-full px-4 py-3 rounded-2xl border-2 border-gray-200 text-lg transition-all" autocomplete="off">
-        </div>
+<section id="register" class="screen"><div class="hero">
+<h2>📝 ลงทะเบียน</h2><p class="muted">ข้อมูลบัญชีและประวัติการสอบเก็บในฐานข้อมูลของเบราว์เซอร์เครื่องนี้ (IndexedDB)</p>
+<div class="field"><label>ชื่อผู้เล่น</label><input id="name" placeholder="เช่น น้องต้นกล้า" maxlength="40"></div>
+<div class="field"><label>ประเภท</label><select id="role"><option value="child">🧒 นักเรียน</option><option value="parent">👨‍👩‍👧 ผู้ปกครอง</option></select></div>
+<div id="gradeWrap" class="field"><label>ระดับชั้น</label><select id="grade"><option>อ.1</option><option>อ.2</option><option>อ.3</option><option>ป.1</option><option>ป.2</option><option selected>ป.3</option><option>ป.4</option><option>ป.5</option><option>ป.6</option></select></div>
+<div class="field"><label>PIN 4 หลัก</label><input id="pin" inputmode="numeric" maxlength="4" placeholder="••••"></div>
+<button class="btn primary wide" onclick="register()">สร้างบัญชี</button><div class="navbar"><button class="btn" onclick="go('home')">⌂ หน้าโฮม</button><button class="btn" onclick="go('login')">→ เข้าสู่ระบบ</button></div>
+<p id="regMsg" class="small"></p>
+</div></section>
 
-        <button onclick="handleLogin()" class="btn-3d w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 rounded-2xl text-2xl mt-4">
-            เข้าสู่ระบบ 🚀
-        </button>
+<section id="login" class="screen"><div class="hero">
+<h2>🔐 เข้าสู่ระบบ</h2>
+<div class="field"><label>ชื่อบัญชี</label><input id="loginName" placeholder="เช่น คุณแม่ / น้องต้นกล้า" maxlength="40"></div>
+<div class="field"><label>PIN 4 หลัก</label><input id="loginPin" inputmode="numeric" maxlength="4" placeholder="••••"></div>
+<button class="btn primary wide" onclick="login()">เข้าเกม</button><div class="navbar"><button class="btn" onclick="go('home')">⌂ หน้าโฮม</button><button class="btn" onclick="go('register')">← ลงทะเบียน</button></div>
+<p id="loginMsg" class="small"></p>
+</div></section>
+
+<section id="choose" class="screen"><div class="hero">
+<div class="top"><div><h2>เลือกวิชา</h2><div id="welcome" class="muted"></div></div><span class="pill" id="gradePill"></span></div>
+<div class="grid">
+<button class="card tile btn" onclick="chooseSubject('ภาษาไทย')"><span class="emoji">📖</span>ภาษาไทย</button>
+<button class="card tile btn" onclick="chooseSubject('คณิตศาสตร์')"><span class="emoji">➗</span>คณิตศาสตร์</button>
+<button class="card tile btn" onclick="chooseSubject('ภาษาอังกฤษ')"><span class="emoji">🇬🇧</span>ภาษาอังกฤษ</button>
+<button class="card tile btn" onclick="chooseSubject('วิทยาศาสตร์')"><span class="emoji">🔬</span>วิทยาศาสตร์</button>
+<button class="card tile btn" onclick="chooseSubject('สังคมศึกษา ศาสนาและวัฒนธรรม')"><span class="emoji">🏫</span>สังคมศึกษา</button>
+<button class="card tile btn" onclick="chooseSubject('ประวัติศาสตร์')"><span class="emoji">🏺</span>ประวัติศาสตร์</button>
+<button class="card tile btn" onclick="chooseSubject('การงานอาชีพ')"><span class="emoji">🧰</span>การงานอาชีพ</button>
+<button class="card tile btn" onclick="chooseSubject('ศิลปะ')"><span class="emoji">🎨</span>ศิลปะ</button>
+<button class="card tile btn" onclick="chooseSubject('สุขศึกษาและพลศึกษา')"><span class="emoji">🏃</span>สุขศึกษา/พละ</button>
+</div>
+<button id="parentDashboardButton" class="btn wide" style="display:none;margin-top:14px" onclick="openParentDashboard()">📊 Parent Dashboard</button>
+<div class="navbar" style="margin-top:14px"><button class="btn" onclick="go('home')">⌂ หน้าโฮม</button><button class="btn" onclick="logout()">🚪 ออกจากระบบ</button></div>
+<div class="small" style="margin-top:15px">คลังข้อสอบ ป.3 ตามหัวข้อจากไฟล์แนบ: ไทย · คณิต · อังกฤษ · วิทยาศาสตร์ · สังคม · ประวัติศาสตร์ · การงาน · ศิลปะ · สุขศึกษา/พลศึกษา · วิชาละ 100 ข้อ · สุ่ม 20 ข้อ · เวลา 60 นาที</div>
+</div></section>
+<section id="parentDashboard" class="screen">
+  <div class="hero">
+    <div class="top">
+      <div>
+        <h2>📊 Parent Dashboard</h2>
+        <div id="parentWelcome" class="muted"></div>
+      </div>
+      <button class="btn" onclick="go('choose')">กลับเกม</button>
     </div>
 
-    <!-- 2. หน้าเลือกวิชา -->
-    <div id="subject-screen" class="hidden w-full max-w-4xl bg-white rounded-3xl shadow-xl p-8 border-4 border-yellow-400 text-center">
-        <h1 class="text-4xl font-bold text-yellow-600 mb-2">เลือกวิชาที่ต้องการทดสอบ</h1>
-        <p id="welcome-message" class="text-gray-600 mb-8 text-xl font-bold"></p>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-            <button onclick="showLeaderboard('math')" class="btn-subject bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-4 px-6 rounded-2xl text-xl">🧮 คณิตศาสตร์</button>
-            <button onclick="showLeaderboard('thai')" class="btn-subject bg-red-400 hover:bg-red-500 text-white font-bold py-4 px-6 rounded-2xl text-xl">🇹🇭 ภาษาไทย</button>
-            <button onclick="showLeaderboard('science')" class="btn-subject bg-green-400 hover:bg-green-500 text-white font-bold py-4 px-6 rounded-2xl text-xl">🔬 วิทยาศาสตร์</button>
-            <button onclick="showLeaderboard('english')" class="btn-subject bg-blue-400 hover:bg-blue-500 text-white font-bold py-4 px-6 rounded-2xl text-xl">🇬🇧 ภาษาอังกฤษ</button>
-            <button onclick="showLeaderboard('social')" class="btn-subject bg-orange-400 hover:bg-orange-500 text-white font-bold py-4 px-6 rounded-2xl text-xl">🌍 สังคมศึกษาฯ</button>
-            <button onclick="showLeaderboard('history')" class="btn-subject bg-amber-600 hover:bg-amber-700 text-white font-bold py-4 px-6 rounded-2xl text-xl">📜 ประวัติศาสตร์</button>
-            <button onclick="showLeaderboard('career')" class="btn-subject bg-pink-400 hover:bg-pink-500 text-white font-bold py-4 px-6 rounded-2xl text-xl">🛠️ การงานอาชีพ</button>
-            <button onclick="showLeaderboard('art')" class="btn-subject bg-purple-400 hover:bg-purple-500 text-white font-bold py-4 px-6 rounded-2xl text-xl">🎨 ศิลปะ-ดนตรี</button>
-            <button onclick="showLeaderboard('health')" class="btn-subject bg-teal-400 hover:bg-teal-500 text-white font-bold py-4 px-6 rounded-2xl text-xl">⚽ สุขศึกษา-พลศึกษา</button>
-        </div>
+    <div class="card" style="padding:16px;margin-top:12px">
+      <h3>👨‍👩‍👧‍👦 ลูกของฉัน</h3>
+      <div class="field">
+        <label>เลือกบัญชีลูก</label>
+        <select id="parentChildSelect" onchange="renderParentDashboard()"></select>
+      </div>
+      <div class="field">
+        <label>เชื่อมบัญชีลูก</label>
+        <input id="childNameToLink" placeholder="ชื่อบัญชีลูก">
+      </div>
+      <button class="btn primary" onclick="linkChildByName()">🔗 เชื่อมบัญชีลูก</button>
+      <p class="small">การเชื่อมบัญชีนี้เป็นระบบต้นแบบในเครื่องเดียว ก่อนย้ายไปฐานข้อมูลออนไลน์</p>
     </div>
 
-    <!-- 3. หน้าตารางจัดอันดับ (Leaderboard) -->
-    <div id="leaderboard-screen" class="hidden w-full max-w-lg bg-white rounded-3xl shadow-xl p-8 border-4 border-indigo-400 text-center">
-        <h1 class="text-4xl font-bold text-indigo-600 mb-2">🏆 ทำเนียบคนเก่ง</h1>
-        <h2 class="text-2xl font-bold text-gray-700 mb-6">วิชา<span id="lb-subject-name" class="text-indigo-500 ml-2"></span></h2>
-        
-        <div id="leaderboard-list" class="flex flex-col gap-3 mb-8 text-left"></div>
+    <div id="parentSummary"></div>
+    <div id="parentSubjects"></div>
+    <div id="parentHistory"></div>
+  </div>
+</section>
 
-        <div class="flex gap-4">
-            <button onclick="backToSubjects()" class="w-1/3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 rounded-2xl text-lg transition-colors">กลับ</button>
-            <button onclick="startQuiz()" class="btn-3d w-2/3 bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-2xl text-xl">เริ่มทำแบบทดสอบเลย! 🚀</button>
+
+<section id="stage" class="screen"><div class="hero center">
+<div class="logo">🏆</div><h2>เลือกด่าน</h2><p id="stageInfo" class="muted"></p>
+<div id="stageButtons"></div>
+<div class="navbar"><button class="btn" onclick="go('choose')">← ย้อนกลับ</button><button class="btn" onclick="go('home')">⌂ หน้าโฮม</button></div>
+</div></section>
+
+<section id="quiz" class="screen"><div class="hero">
+<div class="top"><b id="quizTitle"></b><div style="display:flex;gap:8px;align-items:center"><span class="pill" id="counter"></span><span id="timer" class="timer">60:00</span></div></div>
+<div class="progress"><div id="bar" class="bar"></div></div>
+<div id="question" class="question"></div>
+<div id="options"></div>
+<div id="feedback" class="feedback"></div>
+<div class="navbar"><button id="prevQuestion" class="btn" onclick="prevQuestion()">← ย้อนกลับ</button><button id="next" class="btn primary" style="flex:2" onclick="nextQuestion()">เลือกคำตอบก่อน</button><button class="btn" onclick="goHomeFromQuiz()">⌂ หน้าโฮม</button></div>
+</div></section>
+
+<section id="result" class="screen"><div class="hero center">
+<div class="logo">🎉</div><h2>จบด่านแล้ว!</h2><div id="score" class="score"></div>
+<p id="resultText" class="muted"></p>
+<div class="statgrid"><div class="stat"><strong id="correct"></strong>ตอบถูก</div><div class="stat"><strong id="wrong"></strong>ตอบผิด</div></div>
+<button class="btn primary wide" onclick="startQuiz(stageKey)">🔄 เล่นอีกครั้ง</button>
+<button class="btn wide" onclick="go('choose')">📚 เลือกวิชา</button><button class="btn wide" onclick="go('home')">⌂ หน้าโฮม</button>
+</div></section>
+
+
+</main>
+<script>
+let currentUser=null, subject="", grade="", stageKey="", qi=0, score=0, selected=-1, answered=false;
+const $=id=>document.getElementById(id);
+function go(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$(id).classList.add('active');window.scrollTo(0,0)}
+$('role').addEventListener('change',e=>$('gradeWrap').classList.toggle('hidden',e.target.value==='parent'));
+$('pin').addEventListener('input',e=>e.target.value=e.target.value.replace(/\D/g,'').slice(0,4));
+$('loginPin').addEventListener('input',e=>e.target.value=e.target.value.replace(/\D/g,'').slice(0,4));
+
+/* =========================================================
+   Papa2 App Database — IndexedDB
+   ========================================================= */
+
+const APP_DB_NAME = 'GameForAngpaoAppDB';
+const APP_DB_VERSION = 1;
+const USERS_STORE = 'users';
+const ATTEMPTS_STORE = 'attempts';
+
+let appDbPromise = null;
+
+function openAppDB(){
+  if(appDbPromise) return appDbPromise;
+
+  appDbPromise = new Promise((resolve,reject)=>{
+    const req = indexedDB.open(APP_DB_NAME, APP_DB_VERSION);
+
+    req.onupgradeneeded = () => {
+      const db = req.result;
+
+      if(!db.objectStoreNames.contains(USERS_STORE)){
+        const users = db.createObjectStore(USERS_STORE,{keyPath:'id'});
+        users.createIndex('nameRole','nameRole',{unique:true});
+        users.createIndex('parentId','parentId',{unique:false});
+      }
+
+      if(!db.objectStoreNames.contains(ATTEMPTS_STORE)){
+        const attempts = db.createObjectStore(ATTEMPTS_STORE,{keyPath:'id'});
+        attempts.createIndex('userId','userId',{unique:false});
+        attempts.createIndex('attemptedAt','attemptedAt',{unique:false});
+      }
+    };
+
+    req.onsuccess=()=>resolve(req.result);
+    req.onerror=()=>reject(req.error);
+  });
+
+  return appDbPromise;
+}
+
+function makeId(prefix='id'){
+  if(window.crypto && crypto.randomUUID){
+    return `${prefix}_${crypto.randomUUID()}`;
+  }
+  return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2,10)}`;
+}
+
+function txRequest(storeName, mode, action){
+  return openAppDB().then(db=>new Promise((resolve,reject)=>{
+    const tx=db.transaction(storeName,mode);
+    const store=tx.objectStore(storeName);
+    let request;
+
+    try{
+      request=action(store);
+    }catch(error){
+      reject(error);
+      return;
+    }
+
+    request.onsuccess=()=>resolve(request.result);
+    request.onerror=()=>reject(request.error);
+  }));
+}
+
+async function dbPut(storeName, value){
+  return txRequest(storeName,'readwrite',store=>store.put(value));
+}
+
+async function dbGet(storeName, id){
+  return txRequest(storeName,'readonly',store=>store.get(id));
+}
+
+async function dbGetAll(storeName){
+  return txRequest(storeName,'readonly',store=>store.getAll());
+}
+
+async function dbDelete(storeName, id){
+  return txRequest(storeName,'readwrite',store=>store.delete(id));
+}
+
+async function getAccounts(){
+  return dbGetAll(USERS_STORE);
+}
+
+async function findAccountByName(name){
+  const accounts=await getAccounts();
+  return accounts.find(
+    u => u.name.toLowerCase() === name.trim().toLowerCase()
+  ) || null;
+}
+
+async function register(){
+  const name=$('name').value.trim();
+  const pin=$('pin').value.trim();
+  const role=$('role').value;
+  const g=$('grade').value;
+
+  if(!name || !/^\d{4}$/.test(pin)){
+    $('regMsg').textContent='กรุณากรอกชื่อและ PIN 4 หลัก';
+    return;
+  }
+
+  try{
+    const existing=await findAccountByName(name);
+
+    if(existing){
+      $('regMsg').textContent='มีบัญชีชื่อนี้แล้ว กรุณาใช้ชื่ออื่น';
+      return;
+    }
+
+    const account={
+      id:makeId('user'),
+      name,
+      nameRole:name.toLowerCase(),
+      pin,
+      role,
+      grade:role==='parent'?'':g,
+      parentId:null,
+      createdAt:new Date().toISOString()
+    };
+
+    await dbPut(USERS_STORE,account);
+
+    currentUser=account;
+    localStorage.setItem('quizCurrentUserId',account.id);
+
+    $('regMsg').textContent='สร้างบัญชีสำเร็จ กำลังเข้าสู่เกม...';
+    setTimeout(()=>setupChoose(),250);
+
+  }catch(error){
+    console.error(error);
+    $('regMsg').textContent='ไม่สามารถสร้างบัญชีได้ กรุณาลองใหม่';
+  }
+}
+
+async function login(){
+  const name=$('loginName').value.trim();
+  const pin=$('loginPin').value.trim();
+
+  if(!name || !/^\d{4}$/.test(pin)){
+    $('loginMsg').textContent='กรุณากรอกชื่อบัญชีและ PIN 4 หลัก';
+    return;
+  }
+
+  try{
+    const account=await findAccountByName(name);
+
+    if(!account || account.pin!==pin){
+      $('loginMsg').textContent='ชื่อบัญชีหรือ PIN ไม่ถูกต้อง';
+      return;
+    }
+
+    currentUser=account;
+    localStorage.setItem('quizCurrentUserId',account.id);
+
+    setupChoose();
+
+  }catch(error){
+    console.error(error);
+    $('loginMsg').textContent='ไม่สามารถเข้าสู่ระบบได้';
+  }
+}
+
+async function restoreCurrentUser(){
+  const id=localStorage.getItem('quizCurrentUserId');
+
+  if(!id){
+    return null;
+  }
+
+  try{
+    const account=await dbGet(USERS_STORE,id);
+
+    if(account){
+      currentUser=account;
+      return account;
+    }
+  }catch(error){
+    console.warn('restoreCurrentUser failed',error);
+  }
+
+  return null;
+}
+
+function logout(){
+  currentUser=null;
+  localStorage.removeItem('quizCurrentUserId');
+  go('home');
+}
+
+function setupChoose(){
+ $('welcome').textContent='สวัสดี '+currentUser.name+' 👋';
+ $('gradePill').textContent=currentUser.grade||'ผู้ปกครอง';
+ const parentBtn=$('parentDashboardButton');
+ if(parentBtn) parentBtn.style.display=currentUser.role==='parent'?'block':'none';
+ go('choose');
+};
+const subjectBanks={
+ "ภาษาไทย":{banks:[["thai","📖 ด่าน 1 · ภาษาไทย · 100 ข้อในคลัง"]]},
+ "คณิตศาสตร์":{banks:[["math","🔢 ด่าน 1 · การคูณและการหาร · 200 ข้อในคลัง"]]},
+ "ภาษาอังกฤษ":{banks:[["english","🇬🇧 ด่าน 1 · Grammar / Phonics / Vocab / Reading · 100 ข้อในคลัง"]]},
+ "วิทยาศาสตร์":{banks:[["science","🔬 ด่าน 1 · วิทยาศาสตร์และเทคโนโลยี (พว.) · 100 ข้อในคลัง"]]},
+ "สังคมศึกษา ศาสนาและวัฒนธรรม":{banks:[["social","🏫 ด่าน 1 · สังคม ศาสนา และภูมิศาสตร์ (พว.) · 100 ข้อในคลัง"]]},
+ "ประวัติศาสตร์":{banks:[["history","🏺 ด่าน 1 · ประวัติศาสตร์และภูมิปัญญาไทย (พว.) · 100 ข้อในคลัง"]]},
+ "การงานอาชีพ":{banks:[["work","🧰 ด่าน 1 · การงานอาชีพและงานประดิษฐ์ (พว.) · 100 ข้อในคลัง"]]},
+ "ศิลปะ":{banks:[["art","🎨 ด่าน 1 · ทัศนศิลป์ ดนตรี และนาฏศิลป์ (พว.) · 100 ข้อในคลัง"]]},
+ "สุขศึกษาและพลศึกษา":{banks:[["health","🏃 ด่าน 1 · สุขศึกษาและพลศึกษา (พว.) · 100 ข้อในคลัง"]]}
+};
+const questionFiles={
+ "ภาษาไทย":"questions/p3_thai.json",
+ "คณิตศาสตร์":"questions/p3_math.json",
+ "ภาษาอังกฤษ":"questions/p3_english.json",
+ "วิทยาศาสตร์":"questions/p3_science.json",
+ "สังคมศึกษา ศาสนาและวัฒนธรรม":"questions/p3_social.json",
+ "ประวัติศาสตร์":"questions/p3_history.json",
+ "การงานอาชีพ":"questions/p3_work.json",
+ "ศิลปะ":"questions/p3_art.json",
+ "สุขศึกษาและพลศึกษา":"questions/p3_health.json"
+};
+function chooseSubject(s){
+ subject=s;
+ $('stageInfo').textContent=(currentUser.grade||'')+' · '+s;
+ const box=$('stageButtons'), cfg=subjectBanks[s];
+ box.innerHTML=cfg ? cfg.banks.map(x=>`<button class="btn primary wide" onclick="startQuiz('${x[0]}')">${x[1]}</button>`).join('') : '<div class="small">ยังไม่มีคลังข้อสอบ</div>';
+ go('stage');
+}
+
+let quizQuestions=[], quizAnswers=[], quizChecked=[], quizTimeLeft=3600, quizTimer=null;
+
+function shuffleQuestionChoices(question){
+  const choices = question.o.map((text,index)=>({
+    text,
+    correct: index === question.a
+  }));
+  const shuffledChoices = shuffle(choices);
+
+  return {
+    ...question,
+    o: shuffledChoices.map(x=>x.text),
+    a: shuffledChoices.findIndex(x=>x.correct)
+  };
+}
+
+
+/* =========================================================
+   Parent Dashboard + Multi-child
+   ========================================================= */
+
+async function getChildrenForParent(parentId){
+  const accounts=await getAccounts();
+  return accounts.filter(u=>u.role==='child' && u.parentId===parentId);
+}
+
+async function getAttemptsForUser(userId){
+  const attempts=await dbGetAll(ATTEMPTS_STORE);
+  return attempts
+    .filter(a=>a.userId===userId)
+    .sort((a,b)=>new Date(b.attemptedAt)-new Date(a.attemptedAt));
+}
+
+async function openParentDashboard(){
+  if(!currentUser || currentUser.role!=='parent'){
+    alert('หน้านี้สำหรับบัญชีผู้ปกครอง');
+    return;
+  }
+
+  go('parentDashboard');
+
+  $('parentWelcome').textContent='ผู้ปกครอง: '+currentUser.name;
+
+  await populateChildSelector();
+}
+
+async function populateChildSelector(selectedId=''){
+  const children=await getChildrenForParent(currentUser.id);
+  const select=$('parentChildSelect');
+
+  if(!children.length){
+    select.innerHTML='<option value="">ยังไม่มีบัญชีลูกที่เชื่อม</option>';
+    $('parentSummary').innerHTML='<div class="card" style="padding:16px;margin-top:12px"><p>ยังไม่มีบัญชีลูกที่เชื่อมกับบัญชีนี้</p></div>';
+    $('parentSubjects').innerHTML='';
+    $('parentHistory').innerHTML='';
+    return;
+  }
+
+  select.innerHTML=children.map(c=>
+    `<option value="${escapeHtml(c.id)}">${escapeHtml(c.name)} · ${escapeHtml(c.grade||'-')}</option>`
+  ).join('');
+
+  if(selectedId && children.some(c=>c.id===selectedId)){
+    select.value=selectedId;
+  }
+
+  await renderParentDashboard();
+}
+
+async function renderParentDashboard(){
+  const childId=$('parentChildSelect').value;
+
+  if(!childId){
+    return;
+  }
+
+  const child=await dbGet(USERS_STORE,childId);
+  if(!child) return;
+
+  const attempts=await getAttemptsForUser(childId);
+
+  if(!attempts.length){
+    $('parentSummary').innerHTML=`
+      <div class="card" style="padding:16px;margin-top:12px">
+        <h3>📈 ${escapeHtml(child.name)}</h3>
+        <p>ชั้น ${escapeHtml(child.grade||'-')}</p>
+        <p>ยังไม่มีประวัติการสอบ</p>
+      </div>`;
+    $('parentSubjects').innerHTML='';
+    $('parentHistory').innerHTML='';
+    return;
+  }
+
+  const average=attempts.reduce(
+    (sum,a)=>sum+Number(a.percent||0),0
+  )/attempts.length;
+
+  $('parentSummary').innerHTML=`
+    <div class="statgrid">
+      <div class="stat">
+        <span>จำนวนครั้งสอบ</span>
+        <strong>${attempts.length}</strong>
+      </div>
+      <div class="stat">
+        <span>คะแนนเฉลี่ย</span>
+        <strong>${average.toFixed(1)}%</strong>
+      </div>
+    </div>`;
+
+  const subjects={};
+
+  attempts.forEach(a=>{
+    const key=a.subject||'ไม่ระบุ';
+
+    if(!subjects[key]){
+      subjects[key]={count:0,totalPercent:0,totalScore:0,totalQuestions:0};
+    }
+
+    subjects[key].count++;
+    subjects[key].totalPercent+=Number(a.percent||0);
+    subjects[key].totalScore+=Number(a.score||0);
+    subjects[key].totalQuestions+=Number(a.total||20);
+  });
+
+  $('parentSubjects').innerHTML=`
+    <div class="card" style="padding:16px;margin-top:12px">
+      <h3>📚 สถิติรายวิชา — ${escapeHtml(child.name)}</h3>
+      <div style="overflow:auto">
+      <table style="width:100%;border-collapse:collapse">
+        <thead>
+          <tr>
+            <th style="text-align:left">วิชา</th>
+            <th>ครั้ง</th>
+            <th>เฉลี่ย</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${Object.entries(subjects).map(([subject,s])=>`
+            <tr>
+              <td>${escapeHtml(subject)}</td>
+              <td style="text-align:center">${s.count}</td>
+              <td style="text-align:center">${(s.totalPercent/s.count).toFixed(1)}%</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+      </div>
+    </div>`;
+
+  $('parentHistory').innerHTML=`
+    <div class="card" style="padding:16px;margin-top:12px">
+      <h3>📝 ประวัติการสอบ</h3>
+      <div style="overflow:auto">
+      <table style="width:100%;border-collapse:collapse">
+        <thead>
+          <tr>
+            <th style="text-align:left">วันที่</th>
+            <th style="text-align:left">วิชา</th>
+            <th>คะแนน</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${attempts.map(a=>`
+            <tr>
+              <td>${formatDate(a.attemptedAt)}</td>
+              <td>${escapeHtml(a.subject||'-')}</td>
+              <td style="text-align:center">
+                ${Number(a.score||0)}/${Number(a.total||20)}
+                (${Number(a.percent||0).toFixed(0)}%)
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+      </div>
+    </div>`;
+}
+
+async function linkChildByName(){
+  if(!currentUser || currentUser.role!=='parent'){
+    alert('ต้องเข้าสู่ระบบด้วยบัญชีผู้ปกครอง');
+    return;
+  }
+
+  const name=$('childNameToLink').value.trim();
+
+  if(!name){
+    alert('กรุณากรอกชื่อบัญชีลูก');
+    return;
+  }
+
+  const child=await findAccountByName(name);
+
+  if(!child || child.role!=='child'){
+    alert('ไม่พบบัญชีลูกชื่อนี้');
+    return;
+  }
+
+  if(child.parentId && child.parentId!==currentUser.id){
+    alert('บัญชีลูกนี้เชื่อมกับผู้ปกครองคนอื่นอยู่แล้ว');
+    return;
+  }
+
+  child.parentId=currentUser.id;
+  await dbPut(USERS_STORE,child);
+
+  $('childNameToLink').value='';
+  alert('เชื่อมบัญชีลูกเรียบร้อย');
+
+  await populateChildSelector(child.id);
+}
+
+function escapeHtml(value){
+  return String(value??'')
+    .replaceAll('&','&amp;')
+    .replaceAll('<','&lt;')
+    .replaceAll('>','&gt;')
+    .replaceAll('"','&quot;')
+    .replaceAll("'","&#039;");
+}
+
+function formatDate(iso){
+  try{
+    return new Date(iso).toLocaleString('th-TH');
+  }catch{
+    return '-';
+  }
+}
+
+async function startQuiz(stage){
+ if(!currentUser){
+  alert('กรุณาเข้าสู่ระบบก่อนเริ่มทำแบบทดสอบ');
+  go('login');
+  return;
+ }
+ if(currentUser.role==='child' && currentUser.grade && currentUser.grade!=='ป.3'){
+  alert('ชุดข้อสอบชุดนี้จัดทำสำหรับระดับชั้น ป.3 (สามารถปรับเปลี่ยนระดับชั้นได้ในการตั้งค่า)');
+  return;
+ }
+ stageKey=stage;
+
+ let bank;
+ try{
+   bank=await getActiveQuestions();
+ }catch(error){
+   console.error(error);
+   alert(error.message);
+   return;
+ }
+
+ quizQuestions=shuffle([...bank]).slice(0,20).map(q=>shuffleQuestionChoices(q));
+ qi=0; score=0; quizAnswers=Array(20).fill(-1); quizChecked=Array(20).fill(false);
+ startQuizTimer(); renderQuestion(); go('quiz');
+}
+function shuffle(arr){for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}return arr;}
+function startQuizTimer(){clearInterval(quizTimer);quizTimeLeft=3600;updateTimer();quizTimer=setInterval(()=>{quizTimeLeft--;updateTimer();if(quizTimeLeft<=0){clearInterval(quizTimer);finish(true);}},1000);}
+function updateTimer(){const m=Math.floor(quizTimeLeft/60),s=quizTimeLeft%60,el=$('timer');if(!el)return;el.textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');el.classList.toggle('danger',quizTimeLeft<=300);}
+function goHomeFromQuiz(){if(confirm('ต้องการกลับหน้าโฮมหรือไม่? การทดสอบครั้งนี้จะจบลง')){clearInterval(quizTimer);go('home');}}
+
+const questionCache={};
+
+function validateQuestionBank(data,fileName="questions.json"){
+ const errors=[],warnings=[];
+ if(!data||typeof data!=="object"||Array.isArray(data)){
+   errors.push("ไฟล์ JSON ต้องเป็น object");
+   return {valid:false,errors,warnings};
+ }
+ if(!Array.isArray(data.questions)){
+   errors.push("ต้องมี questions เป็น array");
+   return {valid:false,errors,warnings};
+ }
+ if(data.questions.length===0) errors.push("ไม่พบข้อสอบ");
+ const ids=new Set(),texts=new Map();
+
+ data.questions.forEach((q,i)=>{
+   const label=q&&q.id?q.id:`ข้อที่ ${i+1}`;
+   if(!q||typeof q!=="object"||Array.isArray(q)){
+     errors.push(`${label}: ต้องเป็น object`); return;
+   }
+   if(typeof q.id!=="string"||!q.id.trim()) errors.push(`${label}: ไม่มี id`);
+   else if(ids.has(q.id)) errors.push(`${label}: id ซ้ำ "${q.id}"`);
+   else ids.add(q.id);
+
+   if(typeof q.question!=="string"||!q.question.trim()) errors.push(`${label}: question ต้องไม่ว่าง`);
+   else{
+     const norm=q.question.trim().replace(/\s+/g," ").toLowerCase();
+     if(texts.has(norm)) warnings.push(`${label}: คำถามซ้ำกับ ${texts.get(norm)}`);
+     else texts.set(norm,label);
+   }
+
+   if(!Array.isArray(q.options)) errors.push(`${label}: options ต้องเป็น array`);
+   else{
+     if(q.options.length!==4) errors.push(`${label}: ต้องมีตัวเลือก 4 ตัว แต่พบ ${q.options.length}`);
+     q.options.forEach((o,j)=>{
+       if(typeof o!=="string"||!o.trim()) errors.push(`${label}: ตัวเลือก ${j} ต้องเป็นข้อความ`);
+     });
+     const opts=q.options.map(o=>typeof o==="string"?o.trim().replace(/\s+/g," ").toLowerCase():o);
+     if(new Set(opts).size!==opts.length) warnings.push(`${label}: มีตัวเลือกซ้ำกัน`);
+   }
+
+   if(!Number.isInteger(q.answer)) errors.push(`${label}: answer ต้องเป็นจำนวนเต็ม`);
+   else if(q.answer<0||q.answer>3) errors.push(`${label}: answer ต้องอยู่ระหว่าง 0–3 แต่พบ ${q.answer}`);
+ });
+
+ return {valid:errors.length===0,errors,warnings};
+}
+
+async function loadQuestionBank(key){
+ if(questionCache[key]) return questionCache[key];
+ const url=questionFiles[key];
+ if(!url) throw new Error(`ไม่พบไฟล์ข้อสอบสำหรับ "${key}"`);
+
+ let response;
+ try{response=await fetch(url,{cache:"no-store"});}
+ catch(error){throw new Error(`ไม่สามารถเชื่อมต่อไฟล์ ${url}`);}
+ if(!response.ok) throw new Error(`โหลด ${url} ไม่สำเร็จ: HTTP ${response.status}`);
+
+ let data;
+ try{data=await response.json();}
+ catch(error){throw new Error(`ไฟล์ ${url} ไม่ใช่ JSON ที่ถูกต้อง`);}
+
+ const validation=validateQuestionBank(data,url);
+ if(!validation.valid){
+   console.error("Question Bank Error:",validation.errors);
+   if(validation.warnings.length) console.warn("Question Bank Warning:",validation.warnings);
+   throw new Error(`ไฟล์ข้อสอบ ${url} ไม่ผ่านการตรวจสอบ ${validation.errors.length} รายการ`);
+ }
+ if(validation.warnings.length) console.warn(`Question Bank Warning: ${url}`,validation.warnings);
+
+ const questions=data.questions.map(q=>({id:q.id,q:q.question,o:q.options,a:q.answer,explanation:q.explanation||""}));
+ questionCache[key]=questions;
+ return questions;
+}
+
+async function getActiveQuestions(){
+  return await loadQuestionBank(subject);
+}
+function selectAnswer(i,b){if(quizChecked[qi])return;selected=i;quizAnswers[qi]=i;document.querySelectorAll('#options .option').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');$('next').textContent='ตรวจคำตอบ';}
+function nextQuestion(){
+ if(quizAnswers[qi]<0){$('next').textContent='กรุณาเลือกคำตอบ';return;}
+ if(!quizChecked[qi]){quizChecked[qi]=true;renderQuestion();return;}
+ if(qi<quizQuestions.length-1){qi++;renderQuestion();}else finish(false);
+}
+function prevQuestion(){if(qi>0){qi--;renderQuestion();}}
+
+function renderQuestion(){
+  const q = quizQuestions[qi];
+  if(!q) return;
+
+  $('quizTitle').textContent = subject;
+  $('counter').textContent = (qi + 1) + ' / ' + quizQuestions.length;
+  $('bar').style.width = (((qi + 1) / quizQuestions.length) * 100) + '%';
+  $('question').textContent = (qi + 1) + '. ' + q.q;
+
+  const isChecked = Boolean(quizChecked[qi]);
+  const userAns = quizAnswers[qi];
+
+  const optionsBox = $('options');
+  optionsBox.innerHTML = q.o.map((optText, idx) => {
+    let classes = ['btn', 'option'];
+    if(userAns === idx) classes.push('selected');
+    if(isChecked){
+      if(idx === q.a) classes.push('correct');
+      else if(idx === userAns) classes.push('wrong');
+    }
+    const disabled = isChecked ? 'disabled style="cursor:default"' : '';
+    return `<button type="button" class="${classes.join(' ')}" onclick="selectAnswer(${idx}, this)" ${disabled}>
+      <span style="font-weight:700;margin-right:8px">${String.fromCharCode(65 + idx)}.</span>${escapeHtml(optText)}
+    </button>`;
+  }).join('');
+
+  const fb = $('feedback');
+  if(isChecked){
+    fb.classList.add('show');
+    const isCorrect = userAns === q.a;
+    const correctLetter = String.fromCharCode(65 + q.a);
+    fb.innerHTML = isCorrect
+      ? `<div style="color:var(--good);font-weight:800;font-size:16px">✅ ถูกต้อง เก่งมาก!</div>` +
+        (q.explanation ? `<div style="margin-top:6px;font-size:14px;color:var(--text);line-height:1.5">${escapeHtml(q.explanation)}</div>` : '')
+      : `<div style="color:var(--bad);font-weight:800;font-size:16px">❌ ยังไม่ถูกต้อง (เฉลยข้อ ${correctLetter}: ${escapeHtml(q.o[q.a])})</div>` +
+        (q.explanation ? `<div style="margin-top:6px;font-size:14px;color:var(--text);line-height:1.5">${escapeHtml(q.explanation)}</div>` : '');
+    $('next').textContent = (qi < quizQuestions.length - 1) ? 'ข้อถัดไป →' : 'ดูผลคะแนน 🏆';
+  } else {
+    fb.classList.remove('show');
+    fb.innerHTML = '';
+    $('next').textContent = userAns >= 0 ? 'ตรวจคำตอบ' : 'เลือกคำตอบก่อน';
+  }
+
+  $('prevQuestion').style.display = qi > 0 ? 'inline-block' : 'none';
+}
+
+async function finish(timeUp=false){
+ clearInterval(quizTimer);
+
+ score=quizAnswers.reduce(
+   (sum,ans,i)=>sum+(ans===quizQuestions[i].a?1:0),
+   0
+ );
+
+ const total=quizQuestions.length;
+ const pct=Math.round(score/total*100);
+
+ $('score').textContent=score+'/'+total+' · '+pct+'%';
+ $('correct').textContent=score;
+ $('wrong').textContent=total-score;
+
+ $('resultText').textContent=
+   timeUp
+     ? 'หมดเวลาแล้ว ระบบคิดคะแนนจากคำตอบที่ทำไว้'
+     : (pct>=80
+       ? 'ยอดเยี่ยม! พร้อมไปด่านต่อไป 🚀'
+       : pct>=60
+       ? 'เก่งมาก! ฝึกอีกนิดแล้วจะดีขึ้นอีก 💪'
+       : 'ลองอีกครั้งได้เลย ทุกข้อที่ทำคือการฝึก 🌟');
+
+ const attempt={
+   id:makeId('attempt'),
+   userId:currentUser.id,
+   userName:currentUser.name,
+   subject,
+   grade:currentUser.grade,
+   stage:stageKey,
+   score,
+   total,
+   percent:pct,
+   answers:[...quizAnswers],
+   questionIds:quizQuestions.map(q=>q.id||null),
+   attemptedAt:new Date().toISOString(),
+   timeUp:Boolean(timeUp)
+ };
+
+ try{
+   await dbPut(ATTEMPTS_STORE,attempt);
+ }catch(error){
+   console.error('บันทึกประวัติการสอบไม่สำเร็จ',error);
+   alert('บันทึกประวัติการสอบไม่สำเร็จ กรุณาลองใหม่');
+ }
+
+ go('result');
+}
+
+</script>
+
+<script id="source-library-js">
+/* SOURCE_LIBRARY_JS */
+const SOURCE_DB_NAME = 'GameForAngpaoSourceDB';
+const SOURCE_STORE = 'documents';
+
+function sourceDbOpen(){
+  return new Promise((resolve,reject)=>{
+    const req = indexedDB.open(SOURCE_DB_NAME,1);
+    req.onupgradeneeded = () => {
+      const db=req.result;
+      if(!db.objectStoreNames.contains(SOURCE_STORE)){
+        db.createObjectStore(SOURCE_STORE,{keyPath:'id',autoIncrement:true});
+      }
+    };
+    req.onsuccess=()=>resolve(req.result);
+    req.onerror=()=>reject(req.error);
+  });
+}
+
+async function saveSourceDocument(file){
+  const db=await sourceDbOpen();
+  const record={
+    name:file.name,
+    type:file.type || 'application/octet-stream',
+    size:file.size,
+    uploadedAt:new Date().toISOString(),
+    file:file
+  };
+  return new Promise((resolve,reject)=>{
+    const tx=db.transaction(SOURCE_STORE,'readwrite');
+    const req=tx.objectStore(SOURCE_STORE).add(record);
+    req.onsuccess=()=>resolve(req.result);
+    req.onerror=()=>reject(req.error);
+  });
+}
+
+async function getSourceDocuments(){
+  const db=await sourceDbOpen();
+  return new Promise((resolve,reject)=>{
+    const tx=db.transaction(SOURCE_STORE,'readonly');
+    const req=tx.objectStore(SOURCE_STORE).getAll();
+    req.onsuccess=()=>resolve(req.result);
+    req.onerror=()=>reject(req.error);
+  });
+}
+
+async function deleteSourceDocument(id){
+  const db=await sourceDbOpen();
+  return new Promise((resolve,reject)=>{
+    const tx=db.transaction(SOURCE_STORE,'readwrite');
+    const req=tx.objectStore(SOURCE_STORE).delete(id);
+    req.onsuccess=()=>resolve();
+    req.onerror=()=>reject(req.error);
+  });
+}
+
+function formatBytes(n){
+  if(!n) return '0 B';
+  const units=['B','KB','MB','GB'];
+  let i=0, x=n;
+  while(x>=1024 && i<units.length-1){x/=1024;i++;}
+  return `${x.toFixed(i?1:0)} ${units[i]}`;
+}
+
+async function uploadSourceFiles(){
+  const input=document.getElementById('sourceFileInput');
+  if(!input || !input.files.length){
+    alert('กรุณาเลือกเอกสารก่อน');
+    return;
+  }
+  try{
+    for(const file of input.files) await saveSourceDocument(file);
+    input.value='';
+    await renderSourceLibrary();
+    alert('บันทึกเอกสารลงฐานเอกสารในเครื่องนี้แล้ว');
+  }catch(e){
+    console.error(e);
+    alert('ไม่สามารถบันทึกเอกสารได้: '+e.message);
+  }
+}
+
+async function renderSourceLibrary(){
+  const box=document.getElementById('sourceLibraryList');
+  if(!box) return;
+  try{
+    const docs=await getSourceDocuments();
+    if(!docs.length){
+      box.innerHTML='<div class="source-empty">ยังไม่มีเอกสารตัวอย่างข้อสอบ</div>';
+      return;
+    }
+    box.innerHTML=docs.map(d=>`
+      <div class="source-item">
+        <div>
+          <div class="source-name">📄 ${escapeHtml(d.name)}</div>
+          <div class="source-meta">${formatBytes(d.size)} · ${new Date(d.uploadedAt).toLocaleString('th-TH')}</div>
         </div>
-    </div>
-
-    <!-- 4. หน้าทำข้อสอบ -->
-    <div id="quiz-screen" class="hidden w-full max-w-3xl bg-white rounded-3xl shadow-xl p-6 md:p-8 border-4 border-blue-400 relative">
-        <div class="flex justify-between items-center mb-6 border-b-2 border-gray-100 pb-4">
-            <div class="bg-blue-100 text-blue-800 px-4 py-2 rounded-xl font-bold text-lg">
-                <span id="current-subject-label">วิชา</span> | ข้อที่ <span id="current-q">1</span>/<span id="total-q">20</span>
-            </div>
-            <div id="timer-display" class="bg-red-100 text-red-600 px-4 py-2 rounded-xl font-bold text-xl flex items-center gap-2">
-                ⏱️ 60:00
-            </div>
+        <div class="source-actions">
+          <button onclick="downloadSourceDocument(${d.id})">ดู/ดาวน์โหลด</button>
+          <button onclick="removeSourceDocument(${d.id})">ลบ</button>
         </div>
+      </div>`).join('');
+  }catch(e){
+    box.innerHTML='<div class="source-empty">เบราว์เซอร์นี้ไม่รองรับฐานเอกสารแบบออฟไลน์</div>';
+  }
+}
 
-        <div class="mb-8">
-            <h2 id="question-text" class="text-2xl md:text-3xl font-bold text-gray-800 leading-relaxed text-center min-h-[80px]">กำลังโหลดคำถาม...</h2>
-        </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <button onclick="selectChoice(0)" class="choice-btn btn-choice bg-blue-400 text-white font-bold py-4 px-6 rounded-2xl text-xl text-left"></button>
-            <button onclick="selectChoice(1)" class="choice-btn btn-choice bg-blue-400 text-white font-bold py-4 px-6 rounded-2xl text-xl text-left"></button>
-            <button onclick="selectChoice(2)" class="choice-btn btn-choice bg-blue-400 text-white font-bold py-4 px-6 rounded-2xl text-xl text-left"></button>
-            <button onclick="selectChoice(3)" class="choice-btn btn-choice bg-blue-400 text-white font-bold py-4 px-6 rounded-2xl text-xl text-left"></button>
-        </div>
+async function downloadSourceDocument(id){
+  const docs=await getSourceDocuments();
+  const d=docs.find(x=>x.id===id);
+  if(!d) return;
+  const url=URL.createObjectURL(d.file);
+  const a=document.createElement('a');
+  a.href=url; a.download=d.name; a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
 
-        <!-- หน้าต่างเฉลย -->
-        <div id="feedback" class="hidden rounded-2xl p-6 text-center shadow-inner mt-4 mb-4">
-            <h3 id="feedback-icon" class="text-5xl mb-2"></h3>
-            <p id="feedback-text" class="text-xl font-bold"></p>
-            <p id="explanation-text" class="text-gray-700 mt-2 text-lg"></p>
-        </div>
+async function removeSourceDocument(id){
+  if(!confirm('ลบเอกสารนี้ออกจากฐานเอกสารในเครื่องหรือไม่?')) return;
+  await deleteSourceDocument(id);
+  await renderSourceLibrary();
+}
 
-        <!-- แถบเมนูปุ่มควบคุมด้านล่าง -->
-        <div class="grid grid-cols-3 gap-4 mt-8 border-t-2 border-gray-100 pt-6 items-center">
-            <div class="text-left">
-                <button id="prev-btn" onclick="prevQuestion()" class="btn-3d bg-gray-400 hover:bg-gray-500 text-white font-bold py-3 px-4 rounded-xl text-lg hidden">⬅️ ย้อนกลับ</button>
-            </div>
-            <div class="text-center">
-                <button id="submit-btn" onclick="submitAnswer()" class="btn-3d w-full max-w-[200px] bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-4 rounded-2xl text-xl">ส่งคำตอบ ✅</button>
-            </div>
-            <div class="text-right">
-                <button id="next-btn" onclick="nextQuestion()" class="btn-3d bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-xl text-lg hidden">ข้อต่อไป ➡️</button>
-                <button id="finish-btn" onclick="showResult()" class="btn-3d bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-4 rounded-xl text-lg hidden shadow-[0_6px_0_#b45309]">จบการทดสอบ 🏆</button>
-            </div>
-        </div>
-    </div>
+document.addEventListener('DOMContentLoaded',()=>{
+  renderSourceLibrary();
+});
+</script>
 
-    <!-- 5. หน้าสรุปผล -->
-    <div id="result-screen" class="hidden w-full max-w-2xl bg-white rounded-3xl shadow-xl p-8 border-4 border-yellow-400 text-center">
-        <h1 class="text-5xl mb-4">🏆</h1>
-        <h2 class="text-3xl font-bold text-gray-800 mb-2">ทำแบบทดสอบเสร็จแล้ว!</h2>
-        <p class="text-2xl text-gray-600 mb-6">คะแนนที่ได้</p>
-        <div class="text-6xl font-bold text-yellow-500 mb-6"><span id="final-score">0</span> / <span id="final-total">20</span></div>
-        <button onclick="backToSubjectsFromResult()" class="btn-3d bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-4 px-8 rounded-2xl text-2xl mt-4">กลับไปหน้าเลือกวิชา</button>
-    </div>
+<script>
 
-    <script>
-        // ข้อมูลจำลองสำหรับตารางจัดอันดับ
-        let leaderboards = {
-            "math": [{name: "น้องมะลิ", score: 20}, {name: "พี่ภูผา", score: 18}, {name: "ต้นกล้า", score: 15}],
-            "thai": [{name: "ฟ้าใส", score: 19}, {name: "ข้าวปุ้น", score: 14}],
-            "science": [{name: "ด.ช. เก่งกาจ", score: 20}],
-            "english": [{name: "Alice", score: 18}],
-            "social": [], "history": [], "career": [], "art": [], "health": []
-        };
+async function migrateLegacyData(){
+  try{
+    const oldUserRaw=localStorage.getItem('quizUser');
 
-        // ฐานข้อมูลข้อสอบ
-        const quizDatabase = {
-            "math": [
-                { question: "แม่มีเงิน 1,000 บาท ซื้อหนังสือ 3 เล่ม เล่มละ 150 บาท แม่จะเหลือเงินกี่บาท? (โจทย์ปัญหา)", choices: ["450 บาท", "500 บาท", "550 บาท", "600 บาท"], correctIndex: 2, explanation: "หาค่าหนังสือ 3 เล่มก่อน (150 x 3 = 450) แล้วเอาเงินแม่ตั้งลบออก 1,000 - 450 = 550 บาท" },
-                { question: "ชาวสวนเก็บส้มได้ 800 ผล เน่าทิ้งไป 50 ผล ที่เหลือแบ่งใส่ชะลอม ชะลอมละ 5 ผล จะได้กี่ชะลอม?", choices: ["140 ชะลอม", "150 ชะลอม", "160 ชะลอม", "170 ชะลอม"], correctIndex: 1, explanation: "ลบส้มที่เน่าออกก่อน 800 - 50 = 750 ผล จากนั้นนำมาหารด้วย 5 (750 ÷ 5 = 150)" }
-            ],
-            "thai": [
-                { question: "คำในข้อใด สะกดด้วยมาตราแม่กน ที่ไม่ตรงตามมาตรา?", choices: ["บ้านเรือน", "อาหาร", "ถนน", "สนาม"], correctIndex: 1, explanation: "อาหาร สะกดด้วย ร เรือ แต่อ่านออกเสียงเหมือน น หนู สะกด จึงเป็นมาตราแม่กนที่ไม่ตรงมาตรา" },
-                { question: "ข้อใดเขียนถูกต้อง (คำที่ใช้ บรร)?", choices: ["บันทัด", "บันจุ", "บรรเทา", "บรรได"], correctIndex: 2, explanation: "บรรเทา เขียนถูกต้อง (ส่วนคำอื่นต้องเขียน บรรทัด, บรรจุ, บันได)" }
-            ],
-            "science": [{ question: "ข้อใดคือส่วนประกอบที่มีมากที่สุดในอากาศ?", choices: ["แก๊สออกซิเจน", "แก๊สไนโตรเจน", "แก๊สคาร์บอนไดออกไซด์", "ไอน้ำ"], correctIndex: 1, explanation: "ในอากาศมีแก๊สไนโตรเจนมากที่สุด (ประมาณ 78%)" }],
-            "social": [{ question: "การกระทำใดแสดงถึงความเป็นประชาธิปไตยในชั้นเรียน?", choices: ["หัวหน้าห้องตัดสินใจเรื่องต่างๆ คนเดียว", "ครูเลือกประธานนักเรียนให้", "เพื่อนๆ ร่วมกันโหวตเลือกหัวหน้ากลุ่ม", "นักเรียนที่เรียนเก่งที่สุดมีสิทธิ์เลือกที่นั่งก่อน"], correctIndex: 2, explanation: "การร่วมกันโหวต หรือออกเสียง เป็นพื้นฐานของประชาธิปไตย" }],
-            "history": [{ question: "ในอดีต คนไทยมักเลือกตั้งถิ่นฐานบริเวณใดมากที่สุด?", choices: ["บนยอดเขาสูง", "ใกล้แหล่งน้ำหรือริมแม่น้ำ", "ในป่าลึก", "กลางทะเลทราย"], correctIndex: 1, explanation: "เพื่อความสะดวกในการใช้น้ำอุปโภคบริโภคและการเกษตร" }],
-            "english": [{ question: "Complete: He ______ to school every day.", choices: ["go", "going", "goes", "went"], correctIndex: 2, explanation: "ประธานเป็น He (เอกพจน์) กริยาใน Present Simple Tense ต้องเติม s หรือ es" }],
-            "career": [{ question: "การจัดเตรียมอุปกรณ์การเรียนใส่กระเป๋าด้วยตนเอง มีประโยชน์อย่างไร?", choices: ["ทำให้กระเป๋าเบาลง", "ฝึกความรับผิดชอบและป้องกันการลืมของ", "ทำให้เรียนเก่งขึ้น", "ทำให้กระเป๋าสะอาด"], correctIndex: 1, explanation: "ฝึกความรับผิดชอบ และทำให้รู้ว่ามีอุปกรณ์ครบถ้วนหรือไม่" }],
-            "art": [{ question: "เครื่องดนตรี 'แคน' เป็นเครื่องดนตรีพื้นบ้านของภาคใด?", choices: ["ภาคเหนือ", "ภาคกลาง", "ภาคอีสาน", "ภาคใต้"], correctIndex: 2, explanation: "แคน เป็นเครื่องดนตรีประเภทเป่าที่เป็นเอกลักษณ์ของภาคอีสาน" }],
-            "health": [{ question: "ข้อใดคือ 'การละเล่นพื้นเมือง' ของเด็กไทย?", choices: ["ฟุตบอล", "เทควันโด", "งูกินหาง", "บาสเกตบอล"], correctIndex: 2, explanation: "งูกินหาง มอญซ่อนผ้า รีรีข้าวสาร เป็นการละเล่นพื้นเมืองของไทย" }]
-        };
+    if(oldUserRaw){
+      const oldUser=JSON.parse(oldUserRaw);
+      const existing=await findAccountByName(oldUser.name||'');
 
-        const subjectNames = {
-            "math": "คณิตศาสตร์", "thai": "ภาษาไทย", "science": "วิทยาศาสตร์", 
-            "english": "ภาษาอังกฤษ", "social": "สังคมศึกษาฯ", "history": "ประวัติศาสตร์", 
-            "career": "การงานอาชีพ", "art": "ศิลปะ-ดนตรี", "health": "สุขศึกษา-พลศึกษา"
-        };
-
-        let currentUsername = "";
-        let currentSubjectKey = "";
-        let activeQuizData = []; 
-        let currentQuestionIndex = 0;
-        let score = 0;
-        let timeRemaining = 3600; 
-        let timerInterval;
-
-        function handleLogin() {
-            const username = document.getElementById('username').value.trim();
-            if(username === "") { alert("พิมพ์ชื่อก่อนนะจ๊ะ!"); return; }
-            currentUsername = username; 
-            
-            document.getElementById('login-screen').classList.add('hidden');
-            document.getElementById('subject-screen').classList.remove('hidden');
-            document.getElementById('welcome-message').innerText = `สวัสดีจ้า น้อง${username} 👋 วันนี้อยากทดสอบวิชาอะไรดี?`;
-        }
-
-        document.getElementById("username").addEventListener("keypress", function(event) {
-            if (event.key === "Enter") { event.preventDefault(); handleLogin(); }
+      if(oldUser.name && !existing){
+        await dbPut(USERS_STORE,{
+          id:makeId('user'),
+          name:oldUser.name,
+          nameRole:String(oldUser.name).toLowerCase(),
+          pin:oldUser.pin||'',
+          role:oldUser.role||'child',
+          grade:oldUser.grade||'',
+          parentId:null,
+          createdAt:new Date().toISOString()
         });
+      }
 
-        function showLeaderboard(subjectKey) {
-            currentSubjectKey = subjectKey;
-            document.getElementById('subject-screen').classList.add('hidden');
-            document.getElementById('leaderboard-screen').classList.remove('hidden');
-            document.getElementById('lb-subject-name').innerText = subjectNames[subjectKey];
-            renderLeaderboardList(subjectKey);
+      localStorage.removeItem('quizUser');
+    }
+
+    // Convert old "last result" records into attempt history once.
+    const legacyStatsRaw=localStorage.getItem('quizStats');
+    const currentId=localStorage.getItem('quizCurrentUserId');
+
+    if(legacyStatsRaw && currentId){
+      const legacyStats=JSON.parse(legacyStatsRaw);
+      const existingAttempts=await getAttemptsForUser(currentId);
+
+      if(existingAttempts.length===0){
+        for(const key of Object.keys(legacyStats)){
+          const item=legacyStats[key];
+          const parts=key.split('_');
+
+          await dbPut(ATTEMPTS_STORE,{
+            id:makeId('attempt'),
+            userId:currentId,
+            userName:currentUser?.name||'',
+            subject:parts[0]||'',
+            grade:parts[1]||'',
+            stage:parts.slice(2).join('_'),
+            score:Number(item.lastScore||0),
+            total:20,
+            percent:Number(item.lastPercent||0),
+            answers:[],
+            questionIds:[],
+            attemptedAt:item.lastAttempt||new Date().toISOString(),
+            migrated:true
+          });
         }
+      }
 
-        function renderLeaderboardList(subjectKey) {
-            const lbList = document.getElementById('leaderboard-list');
-            lbList.innerHTML = "";
-            let board = leaderboards[subjectKey] || [];
-            board.sort((a, b) => b.score - a.score);
-            const top5 = board.slice(0, 5);
+      localStorage.removeItem('quizStats');
+    }
 
-            if (top5.length === 0) {
-                lbList.innerHTML = `<div class="text-center text-gray-500 py-4 font-bold">ยังไม่มีคนทำคะแนนเลย<br>มาทำสถิติเป็นคนแรกกันเถอะ!</div>`;
-            } else {
-                top5.forEach((entry, index) => {
-                    let medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '👏';
-                    lbList.innerHTML += `
-                        <div class="leaderboard-item bg-gray-50 p-4 rounded-2xl flex justify-between items-center border border-gray-100">
-                            <div class="flex items-center gap-3">
-                                <div class="rank-badge w-8 h-8 rounded-full flex items-center justify-center font-bold bg-gray-200 text-gray-600">${index + 1}</div>
-                                <span class="font-bold text-lg text-gray-800">${medal} ${entry.name}</span>
-                            </div>
-                            <span class="font-bold text-indigo-600 text-lg">${entry.score} คะแนน</span>
-                        </div>`;
-                });
-            }
-        }
+  }catch(error){
+    console.warn('Legacy data migration warning:',error);
+  }
+}
 
-        function backToSubjects() {
-            document.getElementById('leaderboard-screen').classList.add('hidden');
-            document.getElementById('subject-screen').classList.remove('hidden');
-        }
+async function initializePapa2(){
+  try{
+    await openAppDB();
+    await migrateLegacyData();
+    await restoreCurrentUser();
 
-        function backToSubjectsFromResult() {
-            document.getElementById('result-screen').classList.add('hidden');
-            document.getElementById('subject-screen').classList.remove('hidden');
-        }
+    if(currentUser){
+      setupChoose();
+    }
+  }catch(error){
+    console.error('Papa2 initialization error:',error);
+  }
+}
 
-        // เริ่มทำแบบทดสอบ
-        function startQuiz() {
-            const fullDatabase = quizDatabase[currentSubjectKey] || [];
-            if(fullDatabase.length === 0) { alert("วิชานี้ยังไม่มีข้อสอบในระบบจ้า"); return; }
+initializePapa2();
 
-            const shuffledData = [...fullDatabase].sort(() => 0.5 - Math.random());
-            
-            // เตรียม State สำหรับแต่ละข้อ
-            activeQuizData = shuffledData.slice(0, 20).map(q => ({
-                ...q,
-                selectedChoice: null,
-                isSubmitted: false
-            }));
-
-            document.getElementById('leaderboard-screen').classList.add('hidden');
-            document.getElementById('quiz-screen').classList.remove('hidden');
-            document.getElementById('current-subject-label').innerText = subjectNames[currentSubjectKey];
-            document.getElementById('total-q').innerText = activeQuizData.length;
-
-            currentQuestionIndex = 0;
-            score = 0;
-            startTimer();
-            loadQuestion();
-        }
-
-        function startTimer() {
-            const timerDisplay = document.getElementById('timer-display');
-            clearInterval(timerInterval);
-            timeRemaining = 3600; 
-            
-            timerInterval = setInterval(() => {
-                timeRemaining--;
-                let m = Math.floor(timeRemaining / 60);
-                let s = timeRemaining % 60;
-                timerDisplay.innerHTML = `⏱️ ${m < 10 ? '0'+m : m}:${s < 10 ? '0'+s : s}`;
-                if (timeRemaining <= 0) { clearInterval(timerInterval); showResult(); }
-            }, 1000);
-        }
-
-        // แสดงผลข้อสอบตาม Index ปัจจุบัน
-        function loadQuestion() {
-            let q = activeQuizData[currentQuestionIndex];
-            
-            document.getElementById('current-q').innerText = currentQuestionIndex + 1;
-            document.getElementById('question-text').innerText = q.question;
-            
-            let buttons = document.getElementsByClassName('choice-btn');
-            for (let i = 0; i < buttons.length; i++) {
-                buttons[i].innerText = q.choices[i];
-                
-                // เคลียร์คลาสสีทั้งหมดก่อน
-                buttons[i].classList.remove('bg-green-500', 'bg-red-500', 'bg-blue-600', 'bg-blue-400', 'disabled', 'opacity-50');
-                
-                if (q.isSubmitted) {
-                    buttons[i].classList.add('disabled');
-                    if (i === q.correctIndex) {
-                        buttons[i].classList.add('bg-green-500'); // ข้อถูกเป็นสีเขียวเสมอ
-                    } else if (i === q.selectedChoice) {
-                        buttons[i].classList.add('bg-red-500'); // ข้อที่เลือกผิดเป็นสีแดง
-                    } else {
-                        buttons[i].classList.add('bg-blue-400', 'opacity-50'); // ข้ออื่นจางลง
-                    }
-                } else {
-                    if (i === q.selectedChoice) {
-                        buttons[i].classList.add('bg-blue-600'); // ไฮไลท์ข้อที่กำลังเลือกอยู่
-                    } else {
-                        buttons[i].classList.add('bg-blue-400'); // สภาพปกติ
-                    }
-                }
-            }
-
-            // จัดการหน้าต่างเฉลย
-            let feedback = document.getElementById('feedback');
-            if (q.isSubmitted) {
-                feedback.classList.remove('hidden', 'bg-green-100', 'bg-red-100');
-                if (q.selectedChoice === q.correctIndex) {
-                    feedback.classList.add('bg-green-100');
-                    document.getElementById('feedback-icon').innerText = "🌟";
-                    document.getElementById('feedback-text').innerText = "เก่งมาก! ตอบถูกจ้า";
-                    document.getElementById('feedback-text').className = "text-xl font-bold text-green-600";
-                    document.getElementById('explanation-text').innerText = "";
-                } else {
-                    feedback.classList.add('bg-red-100');
-                    document.getElementById('feedback-icon').innerText = "💡";
-                    document.getElementById('feedback-text').innerText = "อ๊ะ! ยังไม่ถูกนะ ดูคำแนะนำสิ";
-                    document.getElementById('feedback-text').className = "text-xl font-bold text-red-600";
-                    document.getElementById('explanation-text').innerText = q.explanation;
-                }
-            } else {
-                feedback.classList.add('hidden');
-            }
-
-            // จัดการปุ่มด้านล่าง (ย้อนกลับ, ส่งคำตอบ, ข้อต่อไป, จบการทดสอบ)
-            document.getElementById('prev-btn').style.display = currentQuestionIndex > 0 ? 'inline-block' : 'none';
-            document.getElementById('submit-btn').style.display = q.isSubmitted ? 'none' : 'inline-block';
-            
-            // ซ่อนปุ่มข้อต่อไป/จบการทดสอบ ถ้ายังไม่ส่งคำตอบ
-            if (!q.isSubmitted) {
-                document.getElementById('next-btn').style.display = 'none';
-                document.getElementById('finish-btn').style.display = 'none';
-            } else {
-                if (currentQuestionIndex < activeQuizData.length - 1) {
-                    document.getElementById('next-btn').style.display = 'inline-block';
-                    document.getElementById('finish-btn').style.display = 'none';
-                } else {
-                    document.getElementById('next-btn').style.display = 'none';
-                    document.getElementById('finish-btn').style.display = 'inline-block';
-                }
-            }
-        }
-
-        // เมื่อคลิกตัวเลือก
-        function selectChoice(index) {
-            let q = activeQuizData[currentQuestionIndex];
-            if (q.isSubmitted) return; // ถ้าส่งแล้ว ห้ามเปลี่ยน
-            q.selectedChoice = index;
-            loadQuestion(); // รีเฟรชหน้าจอเพื่อไฮไลท์
-        }
-
-        // เมื่อกดส่งคำตอบ
-        function submitAnswer() {
-            let q = activeQuizData[currentQuestionIndex];
-            if (q.selectedChoice === null) {
-                alert("อย่าลืมกดเลือกคำตอบก่อนส่งนะจ๊ะ!");
-                return;
-            }
-            q.isSubmitted = true;
-            if (q.selectedChoice === q.correctIndex) {
-                score++;
-            }
-            loadQuestion(); // รีเฟรชเพื่อโชว์เฉลยและปุ่มไปต่อ
-        }
-
-        function prevQuestion() {
-            if (currentQuestionIndex > 0) {
-                currentQuestionIndex--;
-                loadQuestion();
-            }
-        }
-
-        function nextQuestion() {
-            if (currentQuestionIndex < activeQuizData.length - 1) {
-                currentQuestionIndex++;
-                loadQuestion();
-            }
-        }
-
-        // สรุปผลตอนจบ
-        function showResult() {
-            // ตรวจสอบว่ามีข้อไหนยังไม่ได้ทำไหม
-            let unsubmitted = activeQuizData.filter(q => !q.isSubmitted).length;
-            if (unsubmitted > 0) {
-                if(!confirm(`น้องยังทำไม่ครบอีก ${unsubmitted} ข้อนะ แน่ใจหรือว่าจะส่งข้อสอบเลย?`)) return;
-            }
-
-            clearInterval(timerInterval);
-            document.getElementById('quiz-screen').classList.add('hidden');
-            document.getElementById('result-screen').classList.remove('hidden');
-            document.getElementById('final-score').innerText = score;
-            document.getElementById('final-total').innerText = activeQuizData.length;
-
-            if(!leaderboards[currentSubjectKey]) leaderboards[currentSubjectKey] = [];
-            leaderboards[currentSubjectKey].push({name: currentUsername, score: score});
-        }
-    </script>
-</body>
-</html>
+</script>
+</body></html>
