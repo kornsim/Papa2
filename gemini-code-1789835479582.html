@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz App ป.3 - ครบทุกวิชา</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Mali:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Mali', cursive; background-color: #f0fdf4; }
+        .btn-3d { transition: all 0.1s; box-shadow: 0 6px 0 rgba(0,0,0,0.2); }
+        .btn-3d:active { transform: translateY(6px); box-shadow: 0 0px 0 rgba(0,0,0,0.2); }
+        .btn-3d:disabled { opacity: 0.5; pointer-events: none; transform: translateY(6px); box-shadow: 0 0px 0 rgba(0,0,0,0.2); }
+        .btn-subject { transition: all 0.1s; box-shadow: 0 6px 0 #d97706; }
+        .btn-subject:active { transform: translateY(6px); box-shadow: 0 0px 0 #d97706; }
+        .btn-choice { transition: all 0.1s; box-shadow: 0 6px 0 #1e40af; }
+        .btn-choice:active { transform: translateY(6px); box-shadow: 0 0px 0 #1e40af; }
+        .btn-choice.disabled { pointer-events: none; box-shadow: 0 0px 0 #1e40af; transform: translateY(6px); }
+        input:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3); }
+        .leaderboard-item:nth-child(1) .rank-badge { background-color: #fbbf24; color: #fff; } 
+        .leaderboard-item:nth-child(2) .rank-badge { background-color: #9ca3af; color: #fff; } 
+        .leaderboard-item:nth-child(3) .rank-badge { background-color: #b45309; color: #fff; } 
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <!-- 1. หน้าล็อคอิน -->
+    <div id="login-screen" class="w-full max-w-md bg-white rounded-3xl shadow-xl p-8 border-4 border-blue-400 text-center">
+        <h1 class="text-6xl mb-4">🦁</h1>
+        <h2 class="text-3xl font-bold text-blue-600 mb-2">ยินดีต้อนรับคนเก่ง!</h2>
+        <p class="text-gray-500 mb-8">เข้าสู่ระบบเพื่อเริ่มทำแบบฝึกหัด</p>
+
+        <div class="mb-4 text-left">
+            <label class="block text-gray-700 font-bold mb-2 ml-2">ชื่อผู้ใช้งาน</label>
+            <input type="text" id="username" placeholder="พิมพ์ชื่อตรงนี้เลยจ้า..." class="w-full px-4 py-3 rounded-2xl border-2 border-gray-200 text-lg transition-all" autocomplete="off">
+        </div>
+
+        <button onclick="handleLogin()" class="btn-3d w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 rounded-2xl text-2xl mt-4">
+            เข้าสู่ระบบ 🚀
+        </button>
+    </div>
+
+    <!-- 2. หน้าเลือกวิชา -->
+    <div id="subject-screen" class="hidden w-full max-w-4xl bg-white rounded-3xl shadow-xl p-8 border-4 border-yellow-400 text-center">
+        <h1 class="text-4xl font-bold text-yellow-600 mb-2">เลือกวิชาที่ต้องการทดสอบ</h1>
+        <p id="welcome-message" class="text-gray-600 mb-8 text-xl font-bold"></p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+            <button onclick="showLeaderboard('math')" class="btn-subject bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-4 px-6 rounded-2xl text-xl">🧮 คณิตศาสตร์</button>
+            <button onclick="showLeaderboard('thai')" class="btn-subject bg-red-400 hover:bg-red-500 text-white font-bold py-4 px-6 rounded-2xl text-xl">🇹🇭 ภาษาไทย</button>
+            <button onclick="showLeaderboard('science')" class="btn-subject bg-green-400 hover:bg-green-500 text-white font-bold py-4 px-6 rounded-2xl text-xl">🔬 วิทยาศาสตร์</button>
+            <button onclick="showLeaderboard('english')" class="btn-subject bg-blue-400 hover:bg-blue-500 text-white font-bold py-4 px-6 rounded-2xl text-xl">🇬🇧 ภาษาอังกฤษ</button>
+            <button onclick="showLeaderboard('social')" class="btn-subject bg-orange-400 hover:bg-orange-500 text-white font-bold py-4 px-6 rounded-2xl text-xl">🌍 สังคมศึกษาฯ</button>
+            <button onclick="showLeaderboard('history')" class="btn-subject bg-amber-600 hover:bg-amber-700 text-white font-bold py-4 px-6 rounded-2xl text-xl">📜 ประวัติศาสตร์</button>
+            <button onclick="showLeaderboard('career')" class="btn-subject bg-pink-400 hover:bg-pink-500 text-white font-bold py-4 px-6 rounded-2xl text-xl">🛠️ การงานอาชีพ</button>
+            <button onclick="showLeaderboard('art')" class="btn-subject bg-purple-400 hover:bg-purple-500 text-white font-bold py-4 px-6 rounded-2xl text-xl">🎨 ศิลปะ-ดนตรี</button>
+            <button onclick="showLeaderboard('health')" class="btn-subject bg-teal-400 hover:bg-teal-500 text-white font-bold py-4 px-6 rounded-2xl text-xl">⚽ สุขศึกษา-พลศึกษา</button>
+        </div>
+    </div>
+
+    <!-- 3. หน้าตารางจัดอันดับ (Leaderboard) -->
+    <div id="leaderboard-screen" class="hidden w-full max-w-lg bg-white rounded-3xl shadow-xl p-8 border-4 border-indigo-400 text-center">
+        <h1 class="text-4xl font-bold text-indigo-600 mb-2">🏆 ทำเนียบคนเก่ง</h1>
+        <h2 class="text-2xl font-bold text-gray-700 mb-6">วิชา<span id="lb-subject-name" class="text-indigo-500 ml-2"></span></h2>
+        
+        <div id="leaderboard-list" class="flex flex-col gap-3 mb-8 text-left"></div>
+
+        <div class="flex gap-4">
+            <button onclick="backToSubjects()" class="w-1/3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 rounded-2xl text-lg transition-colors">กลับ</button>
+            <button onclick="startQuiz()" class="btn-3d w-2/3 bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-2xl text-xl">เริ่มทำแบบทดสอบเลย! 🚀</button>
+        </div>
+    </div>
+
+    <!-- 4. หน้าทำข้อสอบ -->
+    <div id="quiz-screen" class="hidden w-full max-w-3xl bg-white rounded-3xl shadow-xl p-6 md:p-8 border-4 border-blue-400 relative">
+        <div class="flex justify-between items-center mb-6 border-b-2 border-gray-100 pb-4">
+            <div class="bg-blue-100 text-blue-800 px-4 py-2 rounded-xl font-bold text-lg">
+                <span id="current-subject-label">วิชา</span> | ข้อที่ <span id="current-q">1</span>/<span id="total-q">20</span>
+            </div>
+            <div id="timer-display" class="bg-red-100 text-red-600 px-4 py-2 rounded-xl font-bold text-xl flex items-center gap-2">
+                ⏱️ 60:00
+            </div>
+        </div>
+
+        <div class="mb-8">
+            <h2 id="question-text" class="text-2xl md:text-3xl font-bold text-gray-800 leading-relaxed text-center min-h-[80px]">กำลังโหลดคำถาม...</h2>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <button onclick="selectChoice(0)" class="choice-btn btn-choice bg-blue-400 text-white font-bold py-4 px-6 rounded-2xl text-xl text-left"></button>
+            <button onclick="selectChoice(1)" class="choice-btn btn-choice bg-blue-400 text-white font-bold py-4 px-6 rounded-2xl text-xl text-left"></button>
+            <button onclick="selectChoice(2)" class="choice-btn btn-choice bg-blue-400 text-white font-bold py-4 px-6 rounded-2xl text-xl text-left"></button>
+            <button onclick="selectChoice(3)" class="choice-btn btn-choice bg-blue-400 text-white font-bold py-4 px-6 rounded-2xl text-xl text-left"></button>
+        </div>
+
+        <!-- หน้าต่างเฉลย -->
+        <div id="feedback" class="hidden rounded-2xl p-6 text-center shadow-inner mt-4 mb-4">
+            <h3 id="feedback-icon" class="text-5xl mb-2"></h3>
+            <p id="feedback-text" class="text-xl font-bold"></p>
+            <p id="explanation-text" class="text-gray-700 mt-2 text-lg"></p>
+        </div>
+
+        <!-- แถบเมนูปุ่มควบคุมด้านล่าง -->
+        <div class="grid grid-cols-3 gap-4 mt-8 border-t-2 border-gray-100 pt-6 items-center">
+            <div class="text-left">
+                <button id="prev-btn" onclick="prevQuestion()" class="btn-3d bg-gray-400 hover:bg-gray-500 text-white font-bold py-3 px-4 rounded-xl text-lg hidden">⬅️ ย้อนกลับ</button>
+            </div>
+            <div class="text-center">
+                <button id="submit-btn" onclick="submitAnswer()" class="btn-3d w-full max-w-[200px] bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-4 rounded-2xl text-xl">ส่งคำตอบ ✅</button>
+            </div>
+            <div class="text-right">
+                <button id="next-btn" onclick="nextQuestion()" class="btn-3d bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-xl text-lg hidden">ข้อต่อไป ➡️</button>
+                <button id="finish-btn" onclick="showResult()" class="btn-3d bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-4 rounded-xl text-lg hidden shadow-[0_6px_0_#b45309]">จบการทดสอบ 🏆</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. หน้าสรุปผล -->
+    <div id="result-screen" class="hidden w-full max-w-2xl bg-white rounded-3xl shadow-xl p-8 border-4 border-yellow-400 text-center">
+        <h1 class="text-5xl mb-4">🏆</h1>
+        <h2 class="text-3xl font-bold text-gray-800 mb-2">ทำแบบทดสอบเสร็จแล้ว!</h2>
+        <p class="text-2xl text-gray-600 mb-6">คะแนนที่ได้</p>
+        <div class="text-6xl font-bold text-yellow-500 mb-6"><span id="final-score">0</span> / <span id="final-total">20</span></div>
+        <button onclick="backToSubjectsFromResult()" class="btn-3d bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-4 px-8 rounded-2xl text-2xl mt-4">กลับไปหน้าเลือกวิชา</button>
+    </div>
+
+    <script>
+        // ข้อมูลจำลองสำหรับตารางจัดอันดับ
+        let leaderboards = {
+            "math": [{name: "น้องมะลิ", score: 20}, {name: "พี่ภูผา", score: 18}, {name: "ต้นกล้า", score: 15}],
+            "thai": [{name: "ฟ้าใส", score: 19}, {name: "ข้าวปุ้น", score: 14}],
+            "science": [{name: "ด.ช. เก่งกาจ", score: 20}],
+            "english": [{name: "Alice", score: 18}],
+            "social": [], "history": [], "career": [], "art": [], "health": []
+        };
+
+        // ฐานข้อมูลข้อสอบ
+        const quizDatabase = {
+            "math": [
+                { question: "แม่มีเงิน 1,000 บาท ซื้อหนังสือ 3 เล่ม เล่มละ 150 บาท แม่จะเหลือเงินกี่บาท? (โจทย์ปัญหา)", choices: ["450 บาท", "500 บาท", "550 บาท", "600 บาท"], correctIndex: 2, explanation: "หาค่าหนังสือ 3 เล่มก่อน (150 x 3 = 450) แล้วเอาเงินแม่ตั้งลบออก 1,000 - 450 = 550 บาท" },
+                { question: "ชาวสวนเก็บส้มได้ 800 ผล เน่าทิ้งไป 50 ผล ที่เหลือแบ่งใส่ชะลอม ชะลอมละ 5 ผล จะได้กี่ชะลอม?", choices: ["140 ชะลอม", "150 ชะลอม", "160 ชะลอม", "170 ชะลอม"], correctIndex: 1, explanation: "ลบส้มที่เน่าออกก่อน 800 - 50 = 750 ผล จากนั้นนำมาหารด้วย 5 (750 ÷ 5 = 150)" }
+            ],
+            "thai": [
+                { question: "คำในข้อใด สะกดด้วยมาตราแม่กน ที่ไม่ตรงตามมาตรา?", choices: ["บ้านเรือน", "อาหาร", "ถนน", "สนาม"], correctIndex: 1, explanation: "อาหาร สะกดด้วย ร เรือ แต่อ่านออกเสียงเหมือน น หนู สะกด จึงเป็นมาตราแม่กนที่ไม่ตรงมาตรา" },
+                { question: "ข้อใดเขียนถูกต้อง (คำที่ใช้ บรร)?", choices: ["บันทัด", "บันจุ", "บรรเทา", "บรรได"], correctIndex: 2, explanation: "บรรเทา เขียนถูกต้อง (ส่วนคำอื่นต้องเขียน บรรทัด, บรรจุ, บันได)" }
+            ],
+            "science": [{ question: "ข้อใดคือส่วนประกอบที่มีมากที่สุดในอากาศ?", choices: ["แก๊สออกซิเจน", "แก๊สไนโตรเจน", "แก๊สคาร์บอนไดออกไซด์", "ไอน้ำ"], correctIndex: 1, explanation: "ในอากาศมีแก๊สไนโตรเจนมากที่สุด (ประมาณ 78%)" }],
+            "social": [{ question: "การกระทำใดแสดงถึงความเป็นประชาธิปไตยในชั้นเรียน?", choices: ["หัวหน้าห้องตัดสินใจเรื่องต่างๆ คนเดียว", "ครูเลือกประธานนักเรียนให้", "เพื่อนๆ ร่วมกันโหวตเลือกหัวหน้ากลุ่ม", "นักเรียนที่เรียนเก่งที่สุดมีสิทธิ์เลือกที่นั่งก่อน"], correctIndex: 2, explanation: "การร่วมกันโหวต หรือออกเสียง เป็นพื้นฐานของประชาธิปไตย" }],
+            "history": [{ question: "ในอดีต คนไทยมักเลือกตั้งถิ่นฐานบริเวณใดมากที่สุด?", choices: ["บนยอดเขาสูง", "ใกล้แหล่งน้ำหรือริมแม่น้ำ", "ในป่าลึก", "กลางทะเลทราย"], correctIndex: 1, explanation: "เพื่อความสะดวกในการใช้น้ำอุปโภคบริโภคและการเกษตร" }],
+            "english": [{ question: "Complete: He ______ to school every day.", choices: ["go", "going", "goes", "went"], correctIndex: 2, explanation: "ประธานเป็น He (เอกพจน์) กริยาใน Present Simple Tense ต้องเติม s หรือ es" }],
+            "career": [{ question: "การจัดเตรียมอุปกรณ์การเรียนใส่กระเป๋าด้วยตนเอง มีประโยชน์อย่างไร?", choices: ["ทำให้กระเป๋าเบาลง", "ฝึกความรับผิดชอบและป้องกันการลืมของ", "ทำให้เรียนเก่งขึ้น", "ทำให้กระเป๋าสะอาด"], correctIndex: 1, explanation: "ฝึกความรับผิดชอบ และทำให้รู้ว่ามีอุปกรณ์ครบถ้วนหรือไม่" }],
+            "art": [{ question: "เครื่องดนตรี 'แคน' เป็นเครื่องดนตรีพื้นบ้านของภาคใด?", choices: ["ภาคเหนือ", "ภาคกลาง", "ภาคอีสาน", "ภาคใต้"], correctIndex: 2, explanation: "แคน เป็นเครื่องดนตรีประเภทเป่าที่เป็นเอกลักษณ์ของภาคอีสาน" }],
+            "health": [{ question: "ข้อใดคือ 'การละเล่นพื้นเมือง' ของเด็กไทย?", choices: ["ฟุตบอล", "เทควันโด", "งูกินหาง", "บาสเกตบอล"], correctIndex: 2, explanation: "งูกินหาง มอญซ่อนผ้า รีรีข้าวสาร เป็นการละเล่นพื้นเมืองของไทย" }]
+        };
+
+        const subjectNames = {
+            "math": "คณิตศาสตร์", "thai": "ภาษาไทย", "science": "วิทยาศาสตร์", 
+            "english": "ภาษาอังกฤษ", "social": "สังคมศึกษาฯ", "history": "ประวัติศาสตร์", 
+            "career": "การงานอาชีพ", "art": "ศิลปะ-ดนตรี", "health": "สุขศึกษา-พลศึกษา"
+        };
+
+        let currentUsername = "";
+        let currentSubjectKey = "";
+        let activeQuizData = []; 
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let timeRemaining = 3600; 
+        let timerInterval;
+
+        function handleLogin() {
+            const username = document.getElementById('username').value.trim();
+            if(username === "") { alert("พิมพ์ชื่อก่อนนะจ๊ะ!"); return; }
+            currentUsername = username; 
+            
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('subject-screen').classList.remove('hidden');
+            document.getElementById('welcome-message').innerText = `สวัสดีจ้า น้อง${username} 👋 วันนี้อยากทดสอบวิชาอะไรดี?`;
+        }
+
+        document.getElementById("username").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") { event.preventDefault(); handleLogin(); }
+        });
+
+        function showLeaderboard(subjectKey) {
+            currentSubjectKey = subjectKey;
+            document.getElementById('subject-screen').classList.add('hidden');
+            document.getElementById('leaderboard-screen').classList.remove('hidden');
+            document.getElementById('lb-subject-name').innerText = subjectNames[subjectKey];
+            renderLeaderboardList(subjectKey);
+        }
+
+        function renderLeaderboardList(subjectKey) {
+            const lbList = document.getElementById('leaderboard-list');
+            lbList.innerHTML = "";
+            let board = leaderboards[subjectKey] || [];
+            board.sort((a, b) => b.score - a.score);
+            const top5 = board.slice(0, 5);
+
+            if (top5.length === 0) {
+                lbList.innerHTML = `<div class="text-center text-gray-500 py-4 font-bold">ยังไม่มีคนทำคะแนนเลย<br>มาทำสถิติเป็นคนแรกกันเถอะ!</div>`;
+            } else {
+                top5.forEach((entry, index) => {
+                    let medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '👏';
+                    lbList.innerHTML += `
+                        <div class="leaderboard-item bg-gray-50 p-4 rounded-2xl flex justify-between items-center border border-gray-100">
+                            <div class="flex items-center gap-3">
+                                <div class="rank-badge w-8 h-8 rounded-full flex items-center justify-center font-bold bg-gray-200 text-gray-600">${index + 1}</div>
+                                <span class="font-bold text-lg text-gray-800">${medal} ${entry.name}</span>
+                            </div>
+                            <span class="font-bold text-indigo-600 text-lg">${entry.score} คะแนน</span>
+                        </div>`;
+                });
+            }
+        }
+
+        function backToSubjects() {
+            document.getElementById('leaderboard-screen').classList.add('hidden');
+            document.getElementById('subject-screen').classList.remove('hidden');
+        }
+
+        function backToSubjectsFromResult() {
+            document.getElementById('result-screen').classList.add('hidden');
+            document.getElementById('subject-screen').classList.remove('hidden');
+        }
+
+        // เริ่มทำแบบทดสอบ
+        function startQuiz() {
+            const fullDatabase = quizDatabase[currentSubjectKey] || [];
+            if(fullDatabase.length === 0) { alert("วิชานี้ยังไม่มีข้อสอบในระบบจ้า"); return; }
+
+            const shuffledData = [...fullDatabase].sort(() => 0.5 - Math.random());
+            
+            // เตรียม State สำหรับแต่ละข้อ
+            activeQuizData = shuffledData.slice(0, 20).map(q => ({
+                ...q,
+                selectedChoice: null,
+                isSubmitted: false
+            }));
+
+            document.getElementById('leaderboard-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            document.getElementById('current-subject-label').innerText = subjectNames[currentSubjectKey];
+            document.getElementById('total-q').innerText = activeQuizData.length;
+
+            currentQuestionIndex = 0;
+            score = 0;
+            startTimer();
+            loadQuestion();
+        }
+
+        function startTimer() {
+            const timerDisplay = document.getElementById('timer-display');
+            clearInterval(timerInterval);
+            timeRemaining = 3600; 
+            
+            timerInterval = setInterval(() => {
+                timeRemaining--;
+                let m = Math.floor(timeRemaining / 60);
+                let s = timeRemaining % 60;
+                timerDisplay.innerHTML = `⏱️ ${m < 10 ? '0'+m : m}:${s < 10 ? '0'+s : s}`;
+                if (timeRemaining <= 0) { clearInterval(timerInterval); showResult(); }
+            }, 1000);
+        }
+
+        // แสดงผลข้อสอบตาม Index ปัจจุบัน
+        function loadQuestion() {
+            let q = activeQuizData[currentQuestionIndex];
+            
+            document.getElementById('current-q').innerText = currentQuestionIndex + 1;
+            document.getElementById('question-text').innerText = q.question;
+            
+            let buttons = document.getElementsByClassName('choice-btn');
+            for (let i = 0; i < buttons.length; i++) {
+                buttons[i].innerText = q.choices[i];
+                
+                // เคลียร์คลาสสีทั้งหมดก่อน
+                buttons[i].classList.remove('bg-green-500', 'bg-red-500', 'bg-blue-600', 'bg-blue-400', 'disabled', 'opacity-50');
+                
+                if (q.isSubmitted) {
+                    buttons[i].classList.add('disabled');
+                    if (i === q.correctIndex) {
+                        buttons[i].classList.add('bg-green-500'); // ข้อถูกเป็นสีเขียวเสมอ
+                    } else if (i === q.selectedChoice) {
+                        buttons[i].classList.add('bg-red-500'); // ข้อที่เลือกผิดเป็นสีแดง
+                    } else {
+                        buttons[i].classList.add('bg-blue-400', 'opacity-50'); // ข้ออื่นจางลง
+                    }
+                } else {
+                    if (i === q.selectedChoice) {
+                        buttons[i].classList.add('bg-blue-600'); // ไฮไลท์ข้อที่กำลังเลือกอยู่
+                    } else {
+                        buttons[i].classList.add('bg-blue-400'); // สภาพปกติ
+                    }
+                }
+            }
+
+            // จัดการหน้าต่างเฉลย
+            let feedback = document.getElementById('feedback');
+            if (q.isSubmitted) {
+                feedback.classList.remove('hidden', 'bg-green-100', 'bg-red-100');
+                if (q.selectedChoice === q.correctIndex) {
+                    feedback.classList.add('bg-green-100');
+                    document.getElementById('feedback-icon').innerText = "🌟";
+                    document.getElementById('feedback-text').innerText = "เก่งมาก! ตอบถูกจ้า";
+                    document.getElementById('feedback-text').className = "text-xl font-bold text-green-600";
+                    document.getElementById('explanation-text').innerText = "";
+                } else {
+                    feedback.classList.add('bg-red-100');
+                    document.getElementById('feedback-icon').innerText = "💡";
+                    document.getElementById('feedback-text').innerText = "อ๊ะ! ยังไม่ถูกนะ ดูคำแนะนำสิ";
+                    document.getElementById('feedback-text').className = "text-xl font-bold text-red-600";
+                    document.getElementById('explanation-text').innerText = q.explanation;
+                }
+            } else {
+                feedback.classList.add('hidden');
+            }
+
+            // จัดการปุ่มด้านล่าง (ย้อนกลับ, ส่งคำตอบ, ข้อต่อไป, จบการทดสอบ)
+            document.getElementById('prev-btn').style.display = currentQuestionIndex > 0 ? 'inline-block' : 'none';
+            document.getElementById('submit-btn').style.display = q.isSubmitted ? 'none' : 'inline-block';
+            
+            // ซ่อนปุ่มข้อต่อไป/จบการทดสอบ ถ้ายังไม่ส่งคำตอบ
+            if (!q.isSubmitted) {
+                document.getElementById('next-btn').style.display = 'none';
+                document.getElementById('finish-btn').style.display = 'none';
+            } else {
+                if (currentQuestionIndex < activeQuizData.length - 1) {
+                    document.getElementById('next-btn').style.display = 'inline-block';
+                    document.getElementById('finish-btn').style.display = 'none';
+                } else {
+                    document.getElementById('next-btn').style.display = 'none';
+                    document.getElementById('finish-btn').style.display = 'inline-block';
+                }
+            }
+        }
+
+        // เมื่อคลิกตัวเลือก
+        function selectChoice(index) {
+            let q = activeQuizData[currentQuestionIndex];
+            if (q.isSubmitted) return; // ถ้าส่งแล้ว ห้ามเปลี่ยน
+            q.selectedChoice = index;
+            loadQuestion(); // รีเฟรชหน้าจอเพื่อไฮไลท์
+        }
+
+        // เมื่อกดส่งคำตอบ
+        function submitAnswer() {
+            let q = activeQuizData[currentQuestionIndex];
+            if (q.selectedChoice === null) {
+                alert("อย่าลืมกดเลือกคำตอบก่อนส่งนะจ๊ะ!");
+                return;
+            }
+            q.isSubmitted = true;
+            if (q.selectedChoice === q.correctIndex) {
+                score++;
+            }
+            loadQuestion(); // รีเฟรชเพื่อโชว์เฉลยและปุ่มไปต่อ
+        }
+
+        function prevQuestion() {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                loadQuestion();
+            }
+        }
+
+        function nextQuestion() {
+            if (currentQuestionIndex < activeQuizData.length - 1) {
+                currentQuestionIndex++;
+                loadQuestion();
+            }
+        }
+
+        // สรุปผลตอนจบ
+        function showResult() {
+            // ตรวจสอบว่ามีข้อไหนยังไม่ได้ทำไหม
+            let unsubmitted = activeQuizData.filter(q => !q.isSubmitted).length;
+            if (unsubmitted > 0) {
+                if(!confirm(`น้องยังทำไม่ครบอีก ${unsubmitted} ข้อนะ แน่ใจหรือว่าจะส่งข้อสอบเลย?`)) return;
+            }
+
+            clearInterval(timerInterval);
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+            document.getElementById('final-score').innerText = score;
+            document.getElementById('final-total').innerText = activeQuizData.length;
+
+            if(!leaderboards[currentSubjectKey]) leaderboards[currentSubjectKey] = [];
+            leaderboards[currentSubjectKey].push({name: currentUsername, score: score});
+        }
+    </script>
+</body>
+</html>
