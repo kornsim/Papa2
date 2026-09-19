@@ -22,6 +22,14 @@ main{max-width:760px;margin:auto;padding:18px} .screen{display:none} .screen.act
 .feedback{padding:12px;border-radius:12px;background:#f7f8fb;margin-top:12px;display:none} .feedback.show{display:block}
 .score{font-size:52px;font-weight:950;text-align:center} .statgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:15px 0} .stat{padding:14px;border:1px solid var(--border);border-radius:15px;text-align:center;background:#f9fafc} .stat strong{display:block;font-size:25px}
 .small{font-size:13px;color:var(--muted)} .hidden{display:none!important}
+.grade-card{position:relative;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:16px 8px;min-height:125px;border-radius:18px;transition:all .15s ease}
+.grade-card.grade-available{border:2px solid #c9c2ff;background:#fff}
+.grade-card.grade-available:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 8px 22px rgba(109,93,252,.12)}
+.grade-card.grade-disabled{opacity:.75;background:#f9fafc;border:1px dashed #d1d6e2}
+.grade-card.grade-current-user{outline:3px solid #6d5dfc;background:#faf9ff}
+.badge-ready{background:#effaf4;color:var(--good);border:1px solid #b7ecd0;border-radius:99px;padding:3px 8px;font-size:12px;font-weight:800;display:inline-block}
+.badge-empty{background:#f3f4f8;color:var(--muted);border:1px solid #e1e4ed;border-radius:99px;padding:3px 8px;font-size:12px;font-weight:700;display:inline-block}
+.badge-user{background:#f0edff;color:var(--accent);border:1px solid #d4cdff;border-radius:99px;padding:2px 7px;font-size:11px;font-weight:800;display:inline-block}
 @media(max-width:520px){main{padding:12px}.hero{padding:18px;border-radius:20px}.grid{grid-template-columns:1fr 1fr}.grid .full-mobile{grid-column:1/-1}.question{font-size:20px}}
 </style>
 
@@ -94,22 +102,39 @@ main{max-width:760px;margin:auto;padding:18px} .screen{display:none} .screen.act
 <p id="loginMsg" class="small"></p>
 </div></section>
 
+<section id="chooseGrade" class="screen"><div class="hero">
+<div class="top"><div><h2>🎓 เลือกระดับชั้น</h2><div id="gradeWelcome" class="muted">ยินดีต้อนรับ กรุณาเลือกระดับชั้นก่อนเลือกวิชา</div></div><span class="pill" id="userRolePill"></span></div>
+<div class="grid" id="gradeGrid"></div>
+<button id="parentDashboardButtonGrade" class="btn wide" style="display:none;margin-top:14px" onclick="openParentDashboard()">📊 Parent Dashboard</button>
+<div class="navbar" style="margin-top:14px"><button class="btn" onclick="go('home')">⌂ หน้าโฮม</button><button class="btn" onclick="logout()">🚪 ออกจากระบบ</button></div>
+<div class="small" style="margin-top:15px">💡 ระบบมีคลังข้อสอบ ป.1, ป.2 และ ป.3 ครบทุกวิชาตามหลักสูตร พว. (รวม 2,800 ข้อ) · ระดับชั้นอื่น ๆ มีจำนวนข้อสอบ 0 ข้อ (กำลังพัฒนา)</div>
+</div></section>
+
 <section id="choose" class="screen"><div class="hero">
-<div class="top"><div><h2>เลือกวิชา</h2><div id="welcome" class="muted"></div></div><span class="pill" id="gradePill"></span></div>
-<div class="grid">
-<button class="card tile btn" onclick="chooseSubject('ภาษาไทย')"><span class="emoji">📖</span>ภาษาไทย</button>
-<button class="card tile btn" onclick="chooseSubject('คณิตศาสตร์')"><span class="emoji">➗</span>คณิตศาสตร์</button>
-<button class="card tile btn" onclick="chooseSubject('ภาษาอังกฤษ')"><span class="emoji">🇬🇧</span>ภาษาอังกฤษ</button>
-<button class="card tile btn" onclick="chooseSubject('วิทยาศาสตร์')"><span class="emoji">🔬</span>วิทยาศาสตร์</button>
-<button class="card tile btn" onclick="chooseSubject('สังคมศึกษา ศาสนาและวัฒนธรรม')"><span class="emoji">🏫</span>สังคมศึกษา</button>
-<button class="card tile btn" onclick="chooseSubject('ประวัติศาสตร์')"><span class="emoji">🏺</span>ประวัติศาสตร์</button>
-<button class="card tile btn" onclick="chooseSubject('การงานอาชีพ')"><span class="emoji">🧰</span>การงานอาชีพ</button>
-<button class="card tile btn" onclick="chooseSubject('ศิลปะ')"><span class="emoji">🎨</span>ศิลปะ</button>
-<button class="card tile btn" onclick="chooseSubject('สุขศึกษาและพลศึกษา')"><span class="emoji">🏃</span>สุขศึกษา/พละ</button>
+<div class="top">
+  <div>
+    <h2 id="chooseSubjectTitle">📚 เลือกวิชา</h2>
+    <div id="chooseSubjectSubtitle" class="muted">กรุณาเลือกวิชาที่ต้องการฝึกทำข้อสอบ</div>
+  </div>
+  <div style="display:flex;gap:6px;align-items:center">
+    <button class="btn" style="min-height:36px;padding:6px 12px;font-size:13px" onclick="go('chooseGrade')">← เปลี่ยนชั้น</button>
+    <span class="pill" id="gradePill"></span>
+  </div>
+</div>
+<div class="grid" id="subjectGrid">
+  <button class="card tile btn" onclick="chooseSubject('ภาษาไทย')"><span class="emoji">📖</span><b>ภาษาไทย</b><div id="subCount_thai" class="small muted" style="margin-top:4px">(100 ข้อ)</div></button>
+  <button class="card tile btn" onclick="chooseSubject('คณิตศาสตร์')"><span class="emoji">➗</span><b>คณิตศาสตร์</b><div id="subCount_math" class="small muted" style="margin-top:4px">(100 ข้อ)</div></button>
+  <button class="card tile btn" onclick="chooseSubject('ภาษาอังกฤษ')"><span class="emoji">🇬🇧</span><b>ภาษาอังกฤษ</b><div id="subCount_english" class="small muted" style="margin-top:4px">(100 ข้อ)</div></button>
+  <button class="card tile btn" onclick="chooseSubject('วิทยาศาสตร์')"><span class="emoji">🔬</span><b>วิทยาศาสตร์</b><div id="subCount_science" class="small muted" style="margin-top:4px">(100 ข้อ)</div></button>
+  <button class="card tile btn" onclick="chooseSubject('สังคมศึกษา ศาสนาและวัฒนธรรม')"><span class="emoji">🏫</span><b>สังคมศึกษา</b><div id="subCount_social" class="small muted" style="margin-top:4px">(100 ข้อ)</div></button>
+  <button class="card tile btn" onclick="chooseSubject('ประวัติศาสตร์')"><span class="emoji">🏺</span><b>ประวัติศาสตร์</b><div id="subCount_history" class="small muted" style="margin-top:4px">(100 ข้อ)</div></button>
+  <button class="card tile btn" onclick="chooseSubject('การงานอาชีพ')"><span class="emoji">🧰</span><b>การงานอาชีพ</b><div id="subCount_work" class="small muted" style="margin-top:4px">(100 ข้อ)</div></button>
+  <button class="card tile btn" onclick="chooseSubject('ศิลปะ')"><span class="emoji">🎨</span><b>ศิลปะ</b><div id="subCount_art" class="small muted" style="margin-top:4px">(100 ข้อ)</div></button>
+  <button class="card tile btn" onclick="chooseSubject('สุขศึกษาและพลศึกษา')"><span class="emoji">🏃</span><b>สุขศึกษา/พละ</b><div id="subCount_health" class="small muted" style="margin-top:4px">(100 ข้อ)</div></button>
 </div>
 <button id="parentDashboardButton" class="btn wide" style="display:none;margin-top:14px" onclick="openParentDashboard()">📊 Parent Dashboard</button>
-<div class="navbar" style="margin-top:14px"><button class="btn" onclick="go('home')">⌂ หน้าโฮม</button><button class="btn" onclick="logout()">🚪 ออกจากระบบ</button></div>
-<div class="small" style="margin-top:15px">คลังข้อสอบ ป.3 ตามหัวข้อจากไฟล์แนบ: ไทย · คณิต · อังกฤษ · วิทยาศาสตร์ · สังคม · ประวัติศาสตร์ · การงาน · ศิลปะ · สุขศึกษา/พลศึกษา · วิชาละ 100 ข้อ · สุ่ม 20 ข้อ · เวลา 60 นาที</div>
+<div class="navbar" style="margin-top:14px"><button class="btn" onclick="go('chooseGrade')">🎓 เลือกระดับชั้นอื่น</button><button class="btn" onclick="go('home')">⌂ หน้าโฮม</button><button class="btn" onclick="logout()">🚪 ออกจากระบบ</button></div>
+<div id="chooseFootnote" class="small" style="margin-top:15px">คลังข้อสอบตามหลักสูตร พว. ครบ 9 วิชา · สุ่ม 20 ข้อ · เวลา 60 นาที</div>
 </div></section>
 <section id="parentDashboard" class="screen">
   <div class="hero">
@@ -118,7 +143,7 @@ main{max-width:760px;margin:auto;padding:18px} .screen{display:none} .screen.act
         <h2>📊 Parent Dashboard</h2>
         <div id="parentWelcome" class="muted"></div>
       </div>
-      <button class="btn" onclick="go('choose')">กลับเกม</button>
+      <button class="btn" onclick="go('chooseGrade')">กลับเกม</button>
     </div>
 
     <div class="card" style="padding:16px;margin-top:12px">
@@ -162,7 +187,9 @@ main{max-width:760px;margin:auto;padding:18px} .screen{display:none} .screen.act
 <p id="resultText" class="muted"></p>
 <div class="statgrid"><div class="stat"><strong id="correct"></strong>ตอบถูก</div><div class="stat"><strong id="wrong"></strong>ตอบผิด</div></div>
 <button class="btn primary wide" onclick="startQuiz(stageKey)">🔄 เล่นอีกครั้ง</button>
-<button class="btn wide" onclick="go('choose')">📚 เลือกวิชา</button><button class="btn wide" onclick="go('home')">⌂ หน้าโฮม</button>
+<button class="btn wide" onclick="setupChooseSubject()">📚 เลือกวิชาอื่นในชั้นนี้</button>
+<button class="btn wide" onclick="setupChooseGrade()">🎓 เปลี่ยนระดับชั้น</button>
+<button class="btn wide" onclick="go('home')">⌂ หน้าโฮม</button>
 </div></section>
 
 
@@ -366,40 +393,125 @@ function logout(){
   go('home');
 }
 
-function setupChoose(){
- $('welcome').textContent='สวัสดี '+currentUser.name+' 👋';
- $('gradePill').textContent=currentUser.grade||'ผู้ปกครอง';
+let currentActiveGrade='ป.3';
+
+const GRADE_CONFIG=[
+ {grade:"อ.1",name:"อนุบาล 1",totalQuestions:0,available:false,icon:"🎒"},
+ {grade:"อ.2",name:"อนุบาล 2",totalQuestions:0,available:false,icon:"🎒"},
+ {grade:"อ.3",name:"อนุบาล 3",totalQuestions:0,available:false,icon:"🎒"},
+ {grade:"ป.1",name:"ประถมศึกษาปีที่ 1",totalQuestions:900,available:true,icon:"🌱"},
+ {grade:"ป.2",name:"ประถมศึกษาปีที่ 2",totalQuestions:900,available:true,icon:"🌿"},
+ {grade:"ป.3",name:"ประถมศึกษาปีที่ 3",totalQuestions:1000,available:true,icon:"🌳"},
+ {grade:"ป.4",name:"ประถมศึกษาปีที่ 4",totalQuestions:0,available:false,icon:"📘"},
+ {grade:"ป.5",name:"ประถมศึกษาปีที่ 5",totalQuestions:0,available:false,icon:"📙"},
+ {grade:"ป.6",name:"ประถมศึกษาปีที่ 6",totalQuestions:0,available:false,icon:"🎓"}
+];
+
+function setupChooseGrade(){
+ if(!currentUser){
+  go('login');
+  return;
+ }
+ $('gradeWelcome').textContent='สวัสดี '+currentUser.name+' 👋 กรุณาเลือกระดับชั้นก่อนเลือกวิชา';
+ const roleText=currentUser.role==='parent'?'👨‍👩‍👧 ผู้ปกครอง':(currentUser.grade?`ชั้น ${currentUser.grade}`:'🧒 นักเรียน');
+ $('userRolePill').textContent=roleText;
+ const parentBtn=$('parentDashboardButtonGrade');
+ if(parentBtn) parentBtn.style.display=currentUser.role==='parent'?'block':'none';
+
+ const grid=$('gradeGrid');
+ grid.innerHTML=GRADE_CONFIG.map(g=>{
+  const isUserGrade=currentUser.role==='child'&&currentUser.grade===g.grade;
+  const hasQ=g.totalQuestions>0;
+  return `
+   <button type="button" class="card tile btn grade-card ${hasQ?'grade-available':'grade-disabled'} ${isUserGrade?'grade-current-user':''}"
+           onclick="selectGrade('${g.grade}')">
+    <span class="emoji">${g.icon}</span>
+    <b style="font-size:20px">${g.grade}</b>
+    <div class="small" style="margin-top:2px">${g.name}</div>
+    <div style="margin-top:6px">
+     ${hasQ
+       ? `<span class="badge-ready">มีข้อสอบ ${g.totalQuestions.toLocaleString()} ข้อ</span>`
+       : `<span class="badge-empty">(จำนวนข้อสอบ 0 ข้อ)</span>`
+     }
+    </div>
+    ${isUserGrade?`<div style="margin-top:4px"><span class="badge-user">★ ชั้นเรียนของคุณ</span></div>`:''}
+   </button>
+  `;
+ }).join('');
+
+ go('chooseGrade');
+}
+
+function selectGrade(g){
+ const found=GRADE_CONFIG.find(x=>x.grade===g);
+ if(!found||found.totalQuestions===0){
+  alert('ระดับชั้น '+g+' ยังไม่มีข้อสอบ (จำนวนข้อสอบ 0 ข้อ)\n\nกรุณาเลือกระดับชั้น ป.1, ป.2 หรือ ป.3 ที่มีข้อสอบพร้อมใช้งาน');
+  return;
+ }
+ currentActiveGrade=g;
+ setupChooseSubject();
+}
+
+function setupChooseSubject(){
+ const g=currentActiveGrade||'ป.3';
+ $('chooseSubjectTitle').textContent=`📚 เลือกวิชา (${g})`;
+ $('chooseSubjectSubtitle').textContent=`ระดับชั้น ${g} · คลังข้อสอบตามหลักสูตร พว. ครบ 9 วิชา`;
+ $('gradePill').textContent=g;
+
+ const mathCount=g==='ป.3'?200:100;
+ const mathEl=$('subCount_math');
+ if(mathEl) mathEl.textContent=`(${mathCount} ข้อ)`;
+
  const parentBtn=$('parentDashboardButton');
  if(parentBtn) parentBtn.style.display=currentUser.role==='parent'?'block':'none';
+
+ const footnote=$('chooseFootnote');
+ if(footnote){
+  const totalQ=g==='ป.3'?1000:900;
+  footnote.textContent=`ระดับชั้น ${g} · รวม ${totalQ.toLocaleString()} ข้อในคลัง · สุ่ม 20 ข้อต่อรอบ · เวลา 60 นาที`;
+ }
+
  go('choose');
+}
+
+function setupChoose(){
+ if(currentUser&&currentUser.grade&&['ป.1','ป.2','ป.3'].includes(currentUser.grade)){
+  currentActiveGrade=currentUser.grade;
+ }
+ setupChooseGrade();
+}
+
+const subjectToKey={
+ "ภาษาไทย":"thai",
+ "คณิตศาสตร์":"math",
+ "ภาษาอังกฤษ":"english",
+ "วิทยาศาสตร์":"science",
+ "สังคมศึกษา ศาสนาและวัฒนธรรม":"social",
+ "ประวัติศาสตร์":"history",
+ "การงานอาชีพ":"work",
+ "ศิลปะ":"art",
+ "สุขศึกษาและพลศึกษา":"health"
 };
-const subjectBanks={
- "ภาษาไทย":{banks:[["thai","📖 ด่าน 1 · ภาษาไทย · 100 ข้อในคลัง"]]},
- "คณิตศาสตร์":{banks:[["math","🔢 ด่าน 1 · การคูณและการหาร · 200 ข้อในคลัง"]]},
- "ภาษาอังกฤษ":{banks:[["english","🇬🇧 ด่าน 1 · Grammar / Phonics / Vocab / Reading · 100 ข้อในคลัง"]]},
- "วิทยาศาสตร์":{banks:[["science","🔬 ด่าน 1 · วิทยาศาสตร์และเทคโนโลยี (พว.) · 100 ข้อในคลัง"]]},
- "สังคมศึกษา ศาสนาและวัฒนธรรม":{banks:[["social","🏫 ด่าน 1 · สังคม ศาสนา และภูมิศาสตร์ (พว.) · 100 ข้อในคลัง"]]},
- "ประวัติศาสตร์":{banks:[["history","🏺 ด่าน 1 · ประวัติศาสตร์และภูมิปัญญาไทย (พว.) · 100 ข้อในคลัง"]]},
- "การงานอาชีพ":{banks:[["work","🧰 ด่าน 1 · การงานอาชีพและงานประดิษฐ์ (พว.) · 100 ข้อในคลัง"]]},
- "ศิลปะ":{banks:[["art","🎨 ด่าน 1 · ทัศนศิลป์ ดนตรี และนาฏศิลป์ (พว.) · 100 ข้อในคลัง"]]},
- "สุขศึกษาและพลศึกษา":{banks:[["health","🏃 ด่าน 1 · สุขศึกษาและพลศึกษา (พว.) · 100 ข้อในคลัง"]]}
-};
-const questionFiles={
- "ภาษาไทย":"questions/p3_thai.json",
- "คณิตศาสตร์":"questions/p3_math.json",
- "ภาษาอังกฤษ":"questions/p3_english.json",
- "วิทยาศาสตร์":"questions/p3_science.json",
- "สังคมศึกษา ศาสนาและวัฒนธรรม":"questions/p3_social.json",
- "ประวัติศาสตร์":"questions/p3_history.json",
- "การงานอาชีพ":"questions/p3_work.json",
- "ศิลปะ":"questions/p3_art.json",
- "สุขศึกษาและพลศึกษา":"questions/p3_health.json"
-};
+
+function getGradeCode(){
+ const gradeMap={'ป.1':'p1','ป.2':'p2','ป.3':'p3'};
+ return gradeMap[currentActiveGrade]||gradeMap[currentUser&&currentUser.grade]||'p3';
+}
+
+function getQuestionUrl(gradeCode,subName){
+ const key=subjectToKey[subName];
+ if(!key) return null;
+ return `questions/${gradeCode}_${key}.json`;
+}
+
 function chooseSubject(s){
  subject=s;
- $('stageInfo').textContent=(currentUser.grade||'')+' · '+s;
- const box=$('stageButtons'), cfg=subjectBanks[s];
- box.innerHTML=cfg ? cfg.banks.map(x=>`<button class="btn primary wide" onclick="startQuiz('${x[0]}')">${x[1]}</button>`).join('') : '<div class="small">ยังไม่มีคลังข้อสอบ</div>';
+ const currentG=currentActiveGrade||'ป.3';
+ $('stageInfo').textContent=currentG+' · '+s;
+ const key=subjectToKey[s]||'quiz';
+ const count=(s==='คณิตศาสตร์'&&currentG==='ป.3')?200:100;
+ const box=$('stageButtons');
+ box.innerHTML=`<button class="btn primary wide" onclick="startQuiz('${key}')">🎯 เริ่มทำแบบทดสอบ · ${s} (${currentG}) · สุ่ม 20 ข้อจาก ${count} ข้อ</button>`;
  go('stage');
 }
 
@@ -638,8 +750,10 @@ async function startQuiz(stage){
   go('login');
   return;
  }
- if(currentUser.role==='child' && currentUser.grade && currentUser.grade!=='ป.3'){
-  alert('ชุดข้อสอบชุดนี้จัดทำสำหรับระดับชั้น ป.3 (สามารถปรับเปลี่ยนระดับชั้นได้ในการตั้งค่า)');
+ const supportedGrades={'ป.1':'p1','ป.2':'p2','ป.3':'p3'};
+ const g=currentActiveGrade||currentUser.grade||'ป.3';
+ if(!supportedGrades[g]){
+  alert(`ชุดข้อสอบสำหรับระดับชั้น ${g} กำลังอยู่ระหว่างการพัฒนา (จำนวนข้อสอบ 0 ข้อ) ขณะนี้เปิดให้บริการระดับชั้น ป.1, ป.2 และ ป.3`);
   return;
  }
  stageKey=stage;
@@ -710,10 +824,12 @@ function validateQuestionBank(data,fileName="questions.json"){
  return {valid:errors.length===0,errors,warnings};
 }
 
-async function loadQuestionBank(key){
- if(questionCache[key]) return questionCache[key];
- const url=questionFiles[key];
- if(!url) throw new Error(`ไม่พบไฟล์ข้อสอบสำหรับ "${key}"`);
+async function loadQuestionBank(subName){
+ const gradeCode=getGradeCode();
+ const cacheKey=`${gradeCode}_${subName}`;
+ if(questionCache[cacheKey]) return questionCache[cacheKey];
+ const url=getQuestionUrl(gradeCode,subName);
+ if(!url) throw new Error(`ไม่พบไฟล์ข้อสอบสำหรับวิชา "${subName}" (${gradeCode})`);
 
  let response;
  try{response=await fetch(url,{cache:"no-store"});}
@@ -733,7 +849,7 @@ async function loadQuestionBank(key){
  if(validation.warnings.length) console.warn(`Question Bank Warning: ${url}`,validation.warnings);
 
  const questions=data.questions.map(q=>({id:q.id,q:q.question,o:q.options,a:q.answer,explanation:q.explanation||""}));
- questionCache[key]=questions;
+ questionCache[cacheKey]=questions;
  return questions;
 }
 
@@ -823,7 +939,7 @@ async function finish(timeUp=false){
    userId:currentUser.id,
    userName:currentUser.name,
    subject,
-   grade:currentUser.grade,
+   grade:currentActiveGrade||currentUser.grade||'ป.3',
    stage:stageKey,
    score,
    total,
