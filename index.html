@@ -72,6 +72,32 @@ main{max-width:760px;margin:auto;padding:18px} .screen{display:none} .screen.act
 
 .navbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.navbar .btn{flex:1;min-width:110px}.timer{font-size:20px;font-weight:900;padding:7px 12px;border-radius:12px;background:#fff3cd;color:#7a5200;border:1px solid #ffe08a}.timer.danger{background:#ffe1e1;color:#a40000;border-color:#ffaaaa}
 </style>
+
+<style>
+#historySummary {
+  margin-top: 18px;
+  padding: 16px;
+  border-radius: 16px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+#historySummary h3 { margin: 0 0 10px; }
+.history-empty { color:#64748b; font-size:14px; }
+.history-table-wrap { overflow-x:auto; }
+.history-table { width:100%; border-collapse:collapse; font-size:13px; }
+.history-table th, .history-table td {
+  padding:8px 6px; border-bottom:1px solid #e2e8f0; text-align:left; white-space:nowrap;
+}
+.history-table th { color:#475569; font-weight:700; }
+.history-actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+.history-btn {
+  border:0; border-radius:10px; padding:8px 12px; cursor:pointer;
+  background:#e2e8f0; color:#0f172a; font-weight:600;
+}
+.history-btn.danger { background:#fee2e2; color:#991b1b; }
+.score-badge { font-weight:800; }
+</style>
+
 </head>
 <body>
 <main>
@@ -89,8 +115,7 @@ main{max-width:760px;margin:auto;padding:18px} .screen{display:none} .screen.act
 </div>
 
 <!-- SOURCE_LIBRARY_START -->
-<section class="card source-home-card" id="sourceLibraryCard">
-  <div class="section-title">📚 ฐานเอกสารตัวอย่างข้อสอบ</div>
+
   <p class="muted">อัปโหลดเอกสารตัวอย่างข้อสอบ/บทเรียน เพื่อเก็บเป็นแหล่งข้อมูลสำหรับสร้างแบบฝึกหัดในขั้นต่อไป</p>
   <div class="upload-box">
     <input id="sourceFileInput" type="file"
@@ -128,7 +153,13 @@ main{max-width:760px;margin:auto;padding:18px} .screen{display:none} .screen.act
 <section id="chooseGrade" class="screen"><div class="hero">
 <div class="top"><div><h2>🎓 เลือกระดับชั้น</h2><div id="gradeWelcome" class="muted">ยินดีต้อนรับ กรุณาเลือกระดับชั้นก่อนเลือกวิชา</div></div><span class="pill" id="userRolePill"></span></div>
 <div class="grid" id="gradeGrid"></div>
-<button id="parentDashboardButtonGrade" class="btn wide" style="display:none;margin-top:14px" onclick="openParentDashboard()">📊 Parent Dashboard</button>
+<button id="parentDashboardButtonGrade" class="btn wide" style="display:none;margin-top:14px" onclick="openParentDashboard()">
+
+<div id="historySummary">
+  <h3>📊 ประวัติการทำข้อสอบ</h3>
+  <div id="historySummaryContent" class="history-empty">ยังไม่มีประวัติการทำข้อสอบ</div>
+</div>
+📊 Parent Dashboard</button>
 <div class="navbar" style="margin-top:14px"><button class="btn" onclick="go('home')">⌂ หน้าโฮม</button><button class="btn" onclick="logout()">🚪 ออกจากระบบ</button></div>
 <div class="small" style="margin-top:15px">💡 ระบบมีคลังข้อสอบ ป.1, ป.2 และ ป.3 ครบทุกวิชาตามหลักสูตร พว. (รวม 2,800 ข้อ) · ระดับชั้นอื่น ๆ มีจำนวนข้อสอบ 0 ข้อ (กำลังพัฒนา)</div>
 </div></section>
@@ -190,8 +221,11 @@ main{max-width:760px;margin:auto;padding:18px} .screen{display:none} .screen.act
 </section>
 
 
-<section id="stage" class="screen"><div class="hero center">
-<div class="logo">🏆</div><h2>เลือกด่าน</h2><p id="stageInfo" class="muted"></p>
+<section id="stage" class="screen"><div class="hero">
+<div class="logo center">🏆</div>
+<h2 class="center">เลือกหน่วยการเรียนรู้</h2>
+<p id="stageInfo" class="muted center"></p>
+<div id="unitSummary" class="card" style="padding:14px;margin:12px 0"></div>
 <div id="stageButtons"></div>
 <div class="navbar"><button class="btn" onclick="go('choose')">← ย้อนกลับ</button><button class="btn" onclick="go('home')">⌂ หน้าโฮม</button></div>
 </div></section>
@@ -535,18 +569,93 @@ function getGradeCode(){
 function getQuestionUrl(gradeCode,subName){
  const key=subjectToKey[subName];
  if(!key) return null;
- return `questions/${gradeCode}_${key}.json`;
+ return `questions/${gradeCode}/${gradeCode}_${key}.json`;
 }
 
-function chooseSubject(s){
+let selectedUnitIds=[];
+let currentQuestionBank=null;
+
+async function chooseSubject(s){
  subject=s;
+ selectedUnitIds=[];
  const currentG=currentActiveGrade||'ป.3';
  $('stageInfo').textContent=currentG+' · '+s;
- const key=subjectToKey[s]||'quiz';
- const count=(s==='คณิตศาสตร์'&&currentG==='ป.3')?200:100;
- const box=$('stageButtons');
- box.innerHTML=`<button class="btn primary wide" onclick="startQuiz('${key}')">🎯 เริ่มทำแบบทดสอบ · ${s} (${currentG}) · สุ่ม 20 ข้อจาก ${count} ข้อ</button>`;
+ $('stageButtons').innerHTML='<div class="card center" style="padding:18px">กำลังโหลดหน่วยการเรียนรู้…</div>';
+ $('unitSummary').innerHTML='';
  go('stage');
+
+ try{
+   const loadedQuestions=await loadQuestionBank(subject);
+   currentQuestionBank={questions:loadedQuestions,units:questionCache[`${getGradeCode()}_${subject}__meta`]?.units||[]};
+   renderUnitSelector();
+ }catch(error){
+   console.error(error);
+   $('stageButtons').innerHTML=`<div class="card" style="padding:18px;color:var(--bad)">❌ ${escapeHtml(error.message)}</div>`;
+ }
+}
+
+function getUnitInfo(){
+ const data=currentQuestionBank?.meta||{};
+ return data.units||[];
+}
+
+function renderUnitSelector(){
+ const data=currentQuestionBank;
+ if(!data){return;}
+ const units=data.units||[];
+ const total=data.questions?.length||0;
+ if(!units.length){
+   $('stageButtons').innerHTML='<div class="card" style="padding:18px">ไม่พบหน่วยการเรียนรู้ในไฟล์ข้อสอบ</div>';
+   return;
+ }
+
+ const unitCounts={};
+ data.questions.forEach(q=>{unitCounts[q.unit_id]=(unitCounts[q.unit_id]||0)+1;});
+
+ $('unitSummary').innerHTML=`<b>📚 ${escapeHtml(subject)}</b><div class="small muted" style="margin-top:4px">เลือกได้ 1 หน่วยหรือหลายหน่วย · รวม ${total.toLocaleString()} ข้อ</div>`;
+
+ $('stageButtons').innerHTML=`
+   <div class="card" style="padding:16px">
+     <div style="display:flex;gap:8px;justify-content:space-between;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+       <b>เลือกหน่วยการเรียนรู้</b>
+       <button class="btn" type="button" onclick="toggleAllUnits()">☑ เลือก/ยกเลิกทั้งหมด</button>
+     </div>
+     <div id="unitList" style="display:grid;gap:10px">
+       ${units.map(u=>{
+         const count=unitCounts[u.id]||0;
+         return `<label class="card" style="display:flex;gap:12px;align-items:flex-start;padding:13px;cursor:pointer">
+           <input type="checkbox" class="unit-check" value="${escapeHtml(u.id)}" onchange="updateUnitSelection()" style="width:20px;height:20px;margin-top:2px">
+           <span style="flex:1"><b>หน่วยที่ ${u.number??'-'}: ${escapeHtml(u.name||u.display_name||'')}</b><br><span class="small muted">${count.toLocaleString()} ข้อ</span></span>
+         </label>`;
+       }).join('')}
+     </div>
+   </div>
+   <button id="startSelectedBtn" class="btn primary wide" style="margin-top:12px" onclick="startQuiz()" disabled>🎯 เลือกหน่วยอย่างน้อย 1 หน่วย</button>`;
+ updateUnitSelection();
+}
+
+function updateUnitSelection(){
+ selectedUnitIds=[...document.querySelectorAll('.unit-check:checked')].map(x=>x.value);
+ const available=(currentQuestionBank?.questions||[]).filter(q=>selectedUnitIds.includes(q.unit_id)).length;
+ const btn=$('startSelectedBtn');
+ if(btn){
+   btn.disabled=selectedUnitIds.length===0 || available===0;
+   btn.textContent=selectedUnitIds.length
+     ? `🎯 เริ่มทำแบบทดสอบ · 20 ข้อ (จาก ${available.toLocaleString()} ข้อ)`
+     : '🎯 เลือกหน่วยอย่างน้อย 1 หน่วย';
+ }
+ const summary=$('unitSummary');
+ if(summary){
+   const base=currentQuestionBank?.questions?.length||0;
+   summary.innerHTML=`<b>📚 ${escapeHtml(subject)}</b><div class="small muted" style="margin-top:4px">เลือก ${selectedUnitIds.length} หน่วย · มีข้อสอบที่เลือก ${available.toLocaleString()} ข้อ จากทั้งหมด ${base.toLocaleString()} ข้อ</div>`;
+ }
+}
+
+function toggleAllUnits(){
+ const checks=[...document.querySelectorAll('.unit-check')];
+ const shouldCheck=checks.some(x=>!x.checked);
+ checks.forEach(x=>x.checked=shouldCheck);
+ updateUnitSelection();
 }
 
 let quizQuestions=[], quizAnswers=[], quizChecked=[], quizTimeLeft=3600, quizTimer=null;
@@ -778,7 +887,8 @@ function formatDate(iso){
   }
 }
 
-async function startQuiz(stage){
+async function startQuiz(){
+ window.quizStartedAt = new Date().toISOString();
  if(!currentUser){
   alert('กรุณาเข้าสู่ระบบก่อนเริ่มทำแบบทดสอบ');
   go('login');
@@ -790,7 +900,11 @@ async function startQuiz(stage){
   alert(`ชุดข้อสอบสำหรับระดับชั้น ${g} กำลังอยู่ระหว่างการพัฒนา (จำนวนข้อสอบ 0 ข้อ) ขณะนี้เปิดให้บริการระดับชั้น ป.1, ป.2 และ ป.3`);
   return;
  }
- stageKey=stage;
+
+ if(!selectedUnitIds.length){
+   alert('กรุณาเลือกหน่วยการเรียนรู้อย่างน้อย 1 หน่วย');
+   return;
+ }
 
  let bank;
  try{
@@ -801,8 +915,16 @@ async function startQuiz(stage){
    return;
  }
 
- quizQuestions=shuffle([...bank]).slice(0,20).map(q=>shuffleQuestionChoices(q));
- qi=0; score=0; quizAnswers=Array(20).fill(-1); quizChecked=Array(20).fill(false);
+ const pool=bank.filter(q=>selectedUnitIds.includes(q.unit_id));
+ if(pool.length===0){
+   alert('หน่วยที่เลือกยังไม่มีข้อสอบ');
+   return;
+ }
+
+ stageKey=selectedUnitIds.join(',');
+ const questionCount=Math.min(20,pool.length);
+ quizQuestions=shuffle([...pool]).slice(0,questionCount).map(q=>shuffleQuestionChoices(q));
+ qi=0; score=0; quizAnswers=Array(questionCount).fill(-1); quizChecked=Array(questionCount).fill(false);
  startQuizTimer(); renderQuestion(); go('quiz');
 }
 function shuffle(arr){for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}return arr;}
@@ -882,8 +1004,18 @@ async function loadQuestionBank(subName){
  }
  if(validation.warnings.length) console.warn(`Question Bank Warning: ${url}`,validation.warnings);
 
- const questions=data.questions.map(q=>({id:q.id,q:q.question,o:q.options,a:q.answer,explanation:q.explanation||""}));
+ const questions=data.questions.map(q=>({
+   id:q.id,
+   q:q.question,
+   o:q.options,
+   a:q.answer,
+   explanation:q.explanation||"",
+   unit_id:q.unit_id||"",
+   topic_id:q.topic_id||null,
+   skill_ids:Array.isArray(q.skill_ids)?q.skill_ids:[]
+ }));
  questionCache[cacheKey]=questions;
+ questionCache[cacheKey+'__meta']={units:Array.isArray(data.units)?data.units:[]};
  return questions;
 }
 
@@ -946,6 +1078,11 @@ function renderQuestion(){
 
 async function finish(timeUp=false){
  clearInterval(quizTimer);
+ try{
+   papa2RecordQuizResult({timeUp:Boolean(timeUp)});
+ }catch(error){
+   console.error('บันทึกคะแนนลง localStorage ไม่สำเร็จ', error);
+ }
 
  score=quizAnswers.reduce(
    (sum,ans,i)=>sum+(ans===quizQuestions[i].a?1:0),
@@ -991,6 +1128,7 @@ async function finish(timeUp=false){
    alert('บันทึกประวัติการสอบไม่สำเร็จ กรุณาลองใหม่');
  }
 
+ papa2RenderHistory();
  renderQuizReview('wrong');
  go('result');
 }
@@ -1102,60 +1240,9 @@ function renderQuizReview(filter = 'wrong'){
 
 <script id="source-library-js">
 /* SOURCE_LIBRARY_JS */
-const SOURCE_DB_NAME = 'GameForAngpaoSourceDB';
-const SOURCE_STORE = 'documents';
-
-function sourceDbOpen(){
-  return new Promise((resolve,reject)=>{
-    const req = indexedDB.open(SOURCE_DB_NAME,1);
-    req.onupgradeneeded = () => {
-      const db=req.result;
-      if(!db.objectStoreNames.contains(SOURCE_STORE)){
-        db.createObjectStore(SOURCE_STORE,{keyPath:'id',autoIncrement:true});
-      }
-    };
-    req.onsuccess=()=>resolve(req.result);
-    req.onerror=()=>reject(req.error);
-  });
-}
-
-async function saveSourceDocument(file){
-  const db=await sourceDbOpen();
-  const record={
-    name:file.name,
-    type:file.type || 'application/octet-stream',
-    size:file.size,
-    uploadedAt:new Date().toISOString(),
-    file:file
-  };
-  return new Promise((resolve,reject)=>{
-    const tx=db.transaction(SOURCE_STORE,'readwrite');
-    const req=tx.objectStore(SOURCE_STORE).add(record);
-    req.onsuccess=()=>resolve(req.result);
-    req.onerror=()=>reject(req.error);
-  });
-}
-
-async function getSourceDocuments(){
-  const db=await sourceDbOpen();
-  return new Promise((resolve,reject)=>{
-    const tx=db.transaction(SOURCE_STORE,'readonly');
-    const req=tx.objectStore(SOURCE_STORE).getAll();
-    req.onsuccess=()=>resolve(req.result);
-    req.onerror=()=>reject(req.error);
-  });
-}
-
-async function deleteSourceDocument(id){
-  const db=await sourceDbOpen();
-  return new Promise((resolve,reject)=>{
-    const tx=db.transaction(SOURCE_STORE,'readwrite');
-    const req=tx.objectStore(SOURCE_STORE).delete(id);
-    req.onsuccess=()=>resolve();
-    req.onerror=()=>reject(req.error);
-  });
-}
-
+async
+async
+async
 function formatBytes(n){
   if(!n) return '0 B';
   const units=['B','KB','MB','GB'];
@@ -1164,65 +1251,11 @@ function formatBytes(n){
   return `${x.toFixed(i?1:0)} ${units[i]}`;
 }
 
-async function uploadSourceFiles(){
-  const input=document.getElementById('sourceFileInput');
-  if(!input || !input.files.length){
-    alert('กรุณาเลือกเอกสารก่อน');
-    return;
-  }
-  try{
-    for(const file of input.files) await saveSourceDocument(file);
-    input.value='';
-    await renderSourceLibrary();
-    alert('บันทึกเอกสารลงฐานเอกสารในเครื่องนี้แล้ว');
-  }catch(e){
-    console.error(e);
-    alert('ไม่สามารถบันทึกเอกสารได้: '+e.message);
-  }
-}
+async
+async
 
-async function renderSourceLibrary(){
-  const box=document.getElementById('sourceLibraryList');
-  if(!box) return;
-  try{
-    const docs=await getSourceDocuments();
-    if(!docs.length){
-      box.innerHTML='<div class="source-empty">ยังไม่มีเอกสารตัวอย่างข้อสอบ</div>';
-      return;
-    }
-    box.innerHTML=docs.map(d=>`
-      <div class="source-item">
-        <div>
-          <div class="source-name">📄 ${escapeHtml(d.name)}</div>
-          <div class="source-meta">${formatBytes(d.size)} · ${new Date(d.uploadedAt).toLocaleString('th-TH')}</div>
-        </div>
-        <div class="source-actions">
-          <button onclick="downloadSourceDocument(${d.id})">ดู/ดาวน์โหลด</button>
-          <button onclick="removeSourceDocument(${d.id})">ลบ</button>
-        </div>
-      </div>`).join('');
-  }catch(e){
-    box.innerHTML='<div class="source-empty">เบราว์เซอร์นี้ไม่รองรับฐานเอกสารแบบออฟไลน์</div>';
-  }
-}
-
-
-async function downloadSourceDocument(id){
-  const docs=await getSourceDocuments();
-  const d=docs.find(x=>x.id===id);
-  if(!d) return;
-  const url=URL.createObjectURL(d.file);
-  const a=document.createElement('a');
-  a.href=url; a.download=d.name; a.click();
-  setTimeout(()=>URL.revokeObjectURL(url),1000);
-}
-
-async function removeSourceDocument(id){
-  if(!confirm('ลบเอกสารนี้ออกจากฐานเอกสารในเครื่องหรือไม่?')) return;
-  await deleteSourceDocument(id);
-  await renderSourceLibrary();
-}
-
+async
+async
 document.addEventListener('DOMContentLoaded',()=>{
   renderSourceLibrary();
 });
@@ -1308,6 +1341,225 @@ async function initializePapa2(){
 }
 
 initializePapa2();
+
+
+/* ===== Papa2 v2.5: localStorage score & quiz history ===== */
+const PAPA2_HISTORY_KEY = "papa2_quiz_history_v1";
+
+function papa2GetCurrentUserKey() {
+  const candidates = [
+    window.currentUser?.id,
+    window.currentUser?.username,
+    window.currentUser?.name,
+    typeof currentUser !== "undefined" ? currentUser?.id : null,
+    typeof currentUser !== "undefined" ? currentUser?.name : null,
+    localStorage.getItem("currentUserId"),
+    localStorage.getItem("currentUser"),
+    "guest"
+  ];
+  return String(candidates.find(v => v !== null && v !== undefined && String(v).trim() !== "") || "guest");
+}
+
+function papa2LoadHistory() {
+  try {
+    const raw = localStorage.getItem(PAPA2_HISTORY_KEY);
+    const data = raw ? JSON.parse(raw) : [];
+    return Array.isArray(data) ? data : [];
+  } catch (e) {
+    console.warn("อ่านประวัติไม่สำเร็จ", e);
+    return [];
+  }
+}
+
+function papa2SaveHistory(record) {
+  const history = papa2LoadHistory();
+  history.unshift(record);
+  // Keep the latest 200 attempts to prevent localStorage from growing forever.
+  localStorage.setItem(PAPA2_HISTORY_KEY, JSON.stringify(history.slice(0, 200)));
+}
+
+function papa2GetUserHistory() {
+  const key = papa2GetCurrentUserKey();
+  return papa2LoadHistory().filter(r => String(r.userKey) === key);
+}
+
+function papa2GetScoreSummary() {
+  const rows = papa2GetUserHistory();
+  const totalAttempts = rows.length;
+  const totalQuestions = rows.reduce((n, r) => n + Number(r.total || 0), 0);
+  const totalCorrect = rows.reduce((n, r) => n + Number(r.score || 0), 0);
+  const avgPercent = totalQuestions ? Math.round(totalCorrect / totalQuestions * 100) : 0;
+  const bestPercent = rows.length ? Math.max(...rows.map(r => Number(r.percent || 0))) : 0;
+  return { totalAttempts, totalQuestions, totalCorrect, avgPercent, bestPercent };
+}
+
+function papa2FormatDate(iso) {
+  try {
+    return new Date(iso).toLocaleString("th-TH", {
+      year: "numeric", month: "short", day: "numeric",
+      hour: "2-digit", minute: "2-digit"
+    });
+  } catch (_) { return iso || ""; }
+}
+
+function papa2RenderHistory() {
+  const el = document.getElementById("historySummaryContent");
+  if (!el) return;
+
+  const rows = papa2GetUserHistory();
+  if (!rows.length) {
+    el.innerHTML = '<div class="history-empty">ยังไม่มีประวัติการทำข้อสอบ</div>';
+    return;
+  }
+
+  const summary = papa2GetScoreSummary();
+  const recent = rows.slice(0, 20);
+
+  el.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:12px">
+      <div><b>${summary.totalAttempts}</b><br><small>ครั้งที่ทำ</small></div>
+      <div><b>${summary.totalCorrect}/${summary.totalQuestions}</b><br><small>ตอบถูก</small></div>
+      <div><b>${summary.avgPercent}%</b><br><small>เฉลี่ย</small></div>
+      <div><b>${summary.bestPercent}%</b><br><small>สูงสุด</small></div>
+    </div>
+    <div class="history-table-wrap">
+      <table class="history-table">
+        <thead>
+          <tr><th>วันที่</th><th>วิชา</th><th>หน่วย</th><th>คะแนน</th><th>เวลา</th></tr>
+        </thead>
+        <tbody>
+          ${recent.map(r => `
+            <tr>
+              <td>${papa2EscapeHtml(papa2FormatDate(r.attemptedAt))}</td>
+              <td>${papa2EscapeHtml(r.subjectName || r.subject || "-")}</td>
+              <td>${papa2EscapeHtml((r.unitNames || []).join(", ") || "ทุกหน่วย")}</td>
+              <td class="score-badge">${Number(r.score || 0)}/${Number(r.total || 0)} (${Number(r.percent || 0)}%)</td>
+              <td>${papa2EscapeHtml(r.durationText || "-")}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+    <div class="history-actions">
+      <button class="history-btn danger" type="button" onclick="papa2ClearMyHistory()">ลบประวัติของฉัน</button>
+    </div>
+  `;
+}
+
+function papa2EscapeHtml(value) {
+  return String(value ?? "").replace(/[&<>"']/g, ch => ({
+    "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#039;"
+  }[ch]));
+}
+
+function papa2ClearMyHistory() {
+  const key = papa2GetCurrentUserKey();
+  const kept = papa2LoadHistory().filter(r => String(r.userKey) !== key);
+  localStorage.setItem(PAPA2_HISTORY_KEY, JSON.stringify(kept));
+  papa2RenderHistory();
+}
+
+function papa2GetUnitNamesForQuiz() {
+  try {
+    const ids = typeof selectedUnitIds !== "undefined" && Array.isArray(selectedUnitIds)
+      ? selectedUnitIds
+      : [];
+    const bank = typeof quizQuestions !== "undefined" && Array.isArray(quizQuestions)
+      ? quizQuestions
+      : [];
+    const map = new Map();
+    bank.forEach(q => {
+      if (q.unit_id) map.set(q.unit_id, q.unit_name || q.unit || q.unit_id);
+    });
+    return ids.map(id => map.get(id) || id);
+  } catch (_) {
+    return [];
+  }
+}
+
+function papa2RecordQuizResult(extra = {}) {
+  const qs = (typeof quizQuestions !== "undefined" && Array.isArray(quizQuestions)) ? quizQuestions : [];
+  const answers = (typeof quizAnswers !== "undefined" && Array.isArray(quizAnswers)) ? quizAnswers : [];
+  let scoreNow = 0;
+
+  const answerDetails = qs.map((q, i) => {
+    const selected = answers[i];
+    const correct = Number(q.a);
+    const isCorrect = selected !== undefined && selected !== null &&
+      Number(selected) === correct;
+    if (isCorrect) scoreNow++;
+    return {
+      questionId: q.id || null,
+      unitId: q.unit_id || null,
+      selected: selected === undefined ? null : selected,
+      correct,
+      isCorrect
+    };
+  });
+
+  const total = qs.length;
+  const percent = total ? Math.round(scoreNow / total * 100) : 0;
+  const endedAt = new Date().toISOString();
+  const startedAt = window.quizStartedAt || null;
+  let durationText = "-";
+
+  if (startedAt) {
+    const sec = Math.max(0, Math.round(
+      (Date.parse(endedAt) - Date.parse(startedAt)) / 1000
+    ));
+    durationText = `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}`;
+  }
+
+  const subjectValue =
+    (typeof subject !== "undefined" ? subject : "") || "";
+  const gradeValue =
+    (typeof currentActiveGrade !== "undefined" ? currentActiveGrade : "") ||
+    (typeof currentUser !== "undefined" ? currentUser?.grade : "") || "ป.3";
+  const userValue =
+    (typeof currentUser !== "undefined" ? currentUser : null) || {};
+
+  const selectedUnitsValue =
+    (typeof selectedUnitIds !== "undefined" && Array.isArray(selectedUnitIds))
+      ? [...selectedUnitIds] : [];
+
+  const record = {
+    id: `attempt_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+    userKey: String(userValue.id || userValue.name || "guest"),
+    userId: userValue.id || null,
+    userName: userValue.name || "",
+    attemptedAt: endedAt,
+    grade: gradeValue,
+    subject: subjectValue,
+    subjectName: subjectValue,
+    unitIds: selectedUnitsValue,
+    unitNames: papa2GetUnitNamesForQuiz(),
+    score: scoreNow,
+    total,
+    percent,
+    durationText,
+    timeUp: !!extra.timeUp,
+    questionIds: qs.map(q => q.id || null),
+    answers: answerDetails
+  };
+
+  papa2SaveHistory(record);
+  window.lastQuizRecord = record;
+  return record;
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  setTimeout(papa2RenderHistory, 0);
+});
+/* ===== End Papa2 v2.5 storage helpers ===== */
+
+
+window.Papa2History = {
+  load: papa2LoadHistory,
+  mine: papa2GetUserHistory,
+  summary: papa2GetScoreSummary,
+  render: papa2RenderHistory,
+  clearMine: papa2ClearMyHistory
+};
 
 </script>
 </body></html>

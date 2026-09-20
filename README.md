@@ -1,16 +1,36 @@
-# Papa2 v2.3 — External JSON Question Bank
+# Papa2 ป.3 — JSON แยกตามรายวิชา
 
-`index.html` โหลดข้อสอบจาก `questions/*.json` ผ่าน `fetch()` และตรวจสอบก่อนใช้
+โครงสร้างนี้จัดทำจากไฟล์ต้นฉบับ พว. ป.3 ชุดที่ 1 จำนวน 2,850 ข้อ
 
-Validator ตรวจ:
-- JSON object
-- questions array
-- id มีและห้ามซ้ำ
-- question ไม่ว่าง
-- options 4 ตัว
-- option ไม่ว่าง
-- answer integer 0–3
-- คำถามซ้ำ = warning
-- ตัวเลือกซ้ำ = warning
+## โครงสร้าง
 
-ถ้ามี error จะไม่โหลดคลังนั้นเข้าเกม
+questions/
+└── p3/
+    ├── p3_thai.json
+    ├── p3_math.json
+    ├── p3_science.json
+    ├── p3_social.json
+    ├── p3_history.json
+    ├── p3_english.json
+    ├── p3_work.json
+    ├── p3_art.json
+    └── p3_health.json
+
+p3_all_2850.json
+└── สำรองรวมข้อสอบทั้งหมด
+
+## การใช้งานใน Papa2
+
+เมื่อเด็กเลือกวิชา ให้โหลดเฉพาะ JSON ของวิชานั้น
+เช่น คณิตศาสตร์ → questions/p3/p3_math.json
+
+จากนั้นกรองด้วย:
+- unit_id
+- topic_id
+- skill_ids
+
+แล้วสุ่มข้อสอบตามจำนวนที่กำหนด เช่น 20 ข้อ
+
+หมายเหตุ:
+- ข้อมูลที่ไม่มีในไฟล์ต้นฉบับจะไม่ถูกแต่งเติม
+- topic_id, learning_objective และ difficulty อาจว่าง
