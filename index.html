@@ -30,6 +30,29 @@ main{max-width:760px;margin:auto;padding:18px} .screen{display:none} .screen.act
 .badge-ready{background:#effaf4;color:var(--good);border:1px solid #b7ecd0;border-radius:99px;padding:3px 8px;font-size:12px;font-weight:800;display:inline-block}
 .badge-empty{background:#f3f4f8;color:var(--muted);border:1px solid #e1e4ed;border-radius:99px;padding:3px 8px;font-size:12px;font-weight:700;display:inline-block}
 .badge-user{background:#f0edff;color:var(--accent);border:1px solid #d4cdff;border-radius:99px;padding:2px 7px;font-size:11px;font-weight:800;display:inline-block}
+
+/* Review Section */
+.review-box{margin-top:22px;text-align:left;border-top:2px dashed var(--border);padding-top:20px}
+.review-header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px}
+.review-filters{display:flex;gap:6px;flex-wrap:wrap}
+.review-filter-btn{padding:7px 14px;border-radius:99px;border:1px solid var(--border);background:#fff;font-size:13px;font-weight:800;cursor:pointer;color:var(--text);transition:.15s}
+.review-filter-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.review-list{display:grid;gap:12px}
+.review-item{padding:16px;border:1px solid var(--border);border-radius:16px;background:#fff;box-shadow:0 3px 12px rgba(30,35,60,.04);text-align:left}
+.review-item.is-wrong{border-left:5px solid var(--bad)}
+.review-item.is-correct{border-left:5px solid var(--good)}
+.review-q-num{font-size:12px;font-weight:800;color:var(--muted)}
+.review-badge{font-size:12px;font-weight:800;padding:3px 9px;border-radius:99px;display:inline-block}
+.review-badge.badge-wrong{background:#fff1f3;color:var(--bad);border:1px solid #ffd0d6}
+.review-badge.badge-correct{background:#effaf4;color:var(--good);border:1px solid #b7ecd0}
+.review-q-text{font-size:16px;font-weight:850;line-height:1.45;margin:8px 0 12px}
+.review-ans-box{display:grid;gap:8px;font-size:14px}
+.review-ans-row{padding:9px 12px;border-radius:10px;line-height:1.45}
+.review-ans-row.wrong{background:#fff1f3;color:#9b1c2e;border:1px solid #ffd0d6}
+.review-ans-row.correct{background:#effaf4;color:#116d42;border:1px solid #b7ecd0}
+.review-explanation{margin-top:10px;padding:11px 14px;background:#f6f8fd;border-radius:10px;border-left:3px solid var(--accent);font-size:13px;line-height:1.55;color:var(--text)}
+.review-empty{text-align:center;padding:24px 16px;border:1px dashed #b7ecd0;background:#effaf4;border-radius:16px;color:var(--good);font-weight:700}
+
 @media(max-width:520px){main{padding:12px}.hero{padding:18px;border-radius:20px}.grid{grid-template-columns:1fr 1fr}.grid .full-mobile{grid-column:1/-1}.question{font-size:20px}}
 </style>
 
@@ -186,10 +209,21 @@ main{max-width:760px;margin:auto;padding:18px} .screen{display:none} .screen.act
 <div class="logo">🎉</div><h2>จบด่านแล้ว!</h2><div id="score" class="score"></div>
 <p id="resultText" class="muted"></p>
 <div class="statgrid"><div class="stat"><strong id="correct"></strong>ตอบถูก</div><div class="stat"><strong id="wrong"></strong>ตอบผิด</div></div>
-<button class="btn primary wide" onclick="startQuiz(stageKey)">🔄 เล่นอีกครั้ง</button>
-<button class="btn wide" onclick="setupChooseSubject()">📚 เลือกวิชาอื่นในชั้นนี้</button>
-<button class="btn wide" onclick="setupChooseGrade()">🎓 เปลี่ยนระดับชั้น</button>
-<button class="btn wide" onclick="go('home')">⌂ หน้าโฮม</button>
+
+<div style="display:flex;gap:10px;flex-wrap:wrap;margin:16px 0">
+  <button class="btn primary" style="flex:1;min-width:140px" onclick="startQuiz(stageKey)">🔄 เล่นอีกครั้ง</button>
+  <button class="btn" style="flex:1;min-width:140px" onclick="setupChooseSubject()">📚 เลือกวิชาอื่น</button>
+</div>
+
+<!-- Review container for incorrect / all questions -->
+<div id="reviewContainer" class="review-box"></div>
+
+<div class="navbar" style="margin-top:24px">
+  <button class="btn" onclick="startQuiz(stageKey)">🔄 เล่นอีกครั้ง</button>
+  <button class="btn" onclick="setupChooseSubject()">📚 เลือกวิชาอื่น</button>
+  <button class="btn" onclick="setupChooseGrade()">🎓 เปลี่ยนชั้น</button>
+  <button class="btn" onclick="go('home')">⌂ หน้าโฮม</button>
+</div>
 </div></section>
 
 
@@ -957,7 +991,111 @@ async function finish(timeUp=false){
    alert('บันทึกประวัติการสอบไม่สำเร็จ กรุณาลองใหม่');
  }
 
+ renderQuizReview('wrong');
  go('result');
+}
+
+let currentReviewFilter = 'wrong';
+
+function renderQuizReview(filter = 'wrong'){
+  currentReviewFilter = filter;
+  const container = $('reviewContainer');
+  if(!container) return;
+
+  const total = quizQuestions.length;
+  const wrongCount = quizQuestions.reduce((sum, q, i) => sum + (quizAnswers[i] !== q.a ? 1 : 0), 0);
+  const correctCount = total - wrongCount;
+
+  const itemsToDisplay = quizQuestions.map((q, i) => {
+    const userAns = quizAnswers[i];
+    const isCorrect = (userAns === q.a);
+    return { q, index: i, userAns, isCorrect };
+  }).filter(item => {
+    if(filter === 'wrong') return !item.isCorrect;
+    return true;
+  });
+
+  let html = `
+    <div class="review-header">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:22px">📋</span>
+        <h3 style="margin:0;font-size:18px;font-weight:900">ทบทวนและเฉลยข้อสอบ</h3>
+      </div>
+      <div class="review-filters">
+        <button type="button" class="review-filter-btn ${filter==='wrong'?'active':''}" onclick="renderQuizReview('wrong')">
+          ❌ เฉพาะข้อที่ผิด (${wrongCount})
+        </button>
+        <button type="button" class="review-filter-btn ${filter==='all'?'active':''}" onclick="renderQuizReview('all')">
+          📝 ทั้งหมด (${total})
+        </button>
+      </div>
+    </div>
+  `;
+
+  if(wrongCount === 0 && filter === 'wrong'){
+    html += `
+      <div class="review-empty">
+        <div style="font-size:32px;margin-bottom:8px">🎉 ยอดเยี่ยมมาก!</div>
+        <div style="font-size:16px;font-weight:800">น้องตอบถูกครบทุกข้อ (${total}/${total}) ไม่มีข้อที่ตอบผิด</div>
+        <p class="muted" style="margin:8px 0 14px">สามารถกดดูเฉลยและคำอธิบายทุกข้อเพื่อทบทวนความรู้เพิ่มเติมได้</p>
+        <button type="button" class="btn" style="font-size:14px;padding:8px 16px" onclick="renderQuizReview('all')">
+          👀 ดูเฉลยและคำอธิบายทุกข้อ
+        </button>
+      </div>
+    `;
+  } else if(itemsToDisplay.length === 0){
+    html += `<div class="review-empty">ไม่มีข้อสอบในหมวดนี้</div>`;
+  } else {
+    html += `<div class="review-list">`;
+    itemsToDisplay.forEach(item => {
+      const { q, index, userAns, isCorrect } = item;
+      const qNum = index + 1;
+      const correctLetter = String.fromCharCode(65 + q.a);
+      const correctText = q.o[q.a];
+      const userLetter = userAns >= 0 ? String.fromCharCode(65 + userAns) : '';
+      const userText = userAns >= 0 ? q.o[userAns] : 'ไม่ได้ตอบ';
+
+      html += `
+        <div class="review-item ${isCorrect ? 'is-correct' : 'is-wrong'}">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px">
+            <span class="review-q-num">ข้อที่ ${qNum} / ${total}</span>
+            <span class="review-badge ${isCorrect ? 'badge-correct' : 'badge-wrong'}">
+              ${isCorrect ? '✅ ตอบถูก' : (userAns >= 0 ? '❌ ตอบผิด' : '⚠️ ไม่ได้ตอบ')}
+            </span>
+          </div>
+          <div class="review-q-text">${escapeHtml(q.q)}</div>
+          
+          <div class="review-ans-box">
+            ${!isCorrect ? `
+              <div class="review-ans-row wrong">
+                <span style="font-weight:800">❌ คำตอบของคุณ:</span> 
+                ${userAns >= 0 ? `<span style="font-weight:700">${userLetter}.</span> ${escapeHtml(userText)}` : `<span style="font-style:italic">ไม่ได้ตอบ</span>`}
+              </div>
+            ` : `
+              <div class="review-ans-row correct">
+                <span style="font-weight:800">✅ คำตอบของคุณ:</span> 
+                <span style="font-weight:700">${userLetter}.</span> ${escapeHtml(userText)}
+              </div>
+            `}
+            <div class="review-ans-row correct">
+              <span style="font-weight:800">✅ คำตอบที่ถูกต้อง:</span> 
+              <span style="font-weight:700">${correctLetter}.</span> ${escapeHtml(correctText)}
+            </div>
+          </div>
+
+          ${q.explanation ? `
+            <div class="review-explanation">
+              <div style="font-weight:800;color:var(--accent);margin-bottom:3px">💡 คำอธิบายเฉลย:</div>
+              <div>${escapeHtml(q.explanation)}</div>
+            </div>
+          ` : ''}
+        </div>
+      `;
+    });
+    html += `</div>`;
+  }
+
+  container.innerHTML = html;
 }
 
 </script>
