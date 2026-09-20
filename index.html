@@ -100,26 +100,9 @@ main{max-width:760px;margin:auto;padding:18px} .screen{display:none} .screen.act
 
 
 <style id="papa2-tts-styles">
-  .papa2-speak-btn {
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    width:34px;
-    height:34px;
-    margin-left:8px;
-    padding:0;
-    border:1px solid #cbd5e1;
-    border-radius:10px;
-    background:#fff;
-    color:#334155;
-    cursor:pointer;
-    font-size:17px;
-    vertical-align:middle;
-    transition:transform .08s ease, background .15s ease;
-  }
-  .papa2-speak-btn:hover { background:#f1f5f9; }
-  .papa2-speak-btn:active { transform:scale(.94); }
-  .papa2-speak-btn.speaking { background:#dbeafe; border-color:#93c5fd; }
+  .:hover { background:#f1f5f9; }
+  .:active { transform:scale(.94); }
+  ..speaking { background:#dbeafe; border-color:#93c5fd; }
   .papa2-tts-stop {
     margin-left:8px;
     padding:7px 11px;
@@ -130,13 +113,6 @@ main{max-width:760px;margin:auto;padding:18px} .screen{display:none} .screen.act
   }
   .papa2-question-text, .papa2-option-text {
     display:inline;
-  }
-  .papa2-tts-toolbar {
-    display:flex;
-    align-items:center;
-    gap:6px;
-    margin:0 0 10px;
-    flex-wrap:wrap;
   }
   .papa2-tts-status {
     font-size:12px;
@@ -1644,17 +1620,12 @@ async function papa2LoadJsonBySubject(subjectId) {
 /* ===== Papa2 v2.8 — Browser Text-to-Speech ===== */
 let papa2TtsCurrentButton = null;
 
-function papa2TtsLanguage() {
-  const subjectId = String(
-    (typeof subject !== "undefined" ? subject : "") ||
-    window.currentSubjectId || ""
-  ).toUpperCase();
+function
   return subjectId === "ENGLISH" ? "en-US" : "th-TH";
 }
 
 function papa2StopSpeech() {
-  if ("speechSynthesis" in window) {
-    window.speechSynthesis.cancel();
+  if ("" in window) {
   }
   if (papa2TtsCurrentButton) {
     papa2TtsCurrentButton.classList.remove("speaking");
@@ -1663,7 +1634,7 @@ function papa2StopSpeech() {
 }
 
 function papa2Speak(text, button) {
-  if (!("speechSynthesis" in window)) {
+  if (!("" in window)) {
     alert("เบราว์เซอร์นี้ไม่รองรับการอ่านออกเสียง");
     return;
   }
@@ -1671,20 +1642,19 @@ function papa2Speak(text, button) {
   const cleanText = String(text ?? "").trim();
   if (!cleanText) return;
 
-  if (papa2TtsCurrentButton === button && window.speechSynthesis.speaking) {
-    papa2StopSpeech();
+  if (papa2TtsCurrentButton === button &&
     return;
   }
 
   papa2StopSpeech();
 
-  const utterance = new SpeechSynthesisUtterance(cleanText);
-  utterance.lang = papa2TtsLanguage();
+  const utterance =
+  utterance.lang =
   utterance.rate = 0.9;
   utterance.pitch = 1;
   utterance.volume = 1;
 
-  const voices = window.speechSynthesis.getVoices();
+  const voices =
   const langPrefix = utterance.lang.toLowerCase().split("-")[0];
   const preferredVoice =
     voices.find(v => v.lang && v.lang.toLowerCase() === utterance.lang.toLowerCase()) ||
@@ -1703,14 +1673,11 @@ function papa2Speak(text, button) {
     if (button) button.classList.remove("speaking");
     if (papa2TtsCurrentButton === button) papa2TtsCurrentButton = null;
   };
-
-  window.speechSynthesis.speak(utterance);
 }
 
-function papa2TtsButton(text, label) {
-  const button = document.createElement("button");
+function
   button.type = "button";
-  button.className = "papa2-speak-btn";
+  button.className = "";
   button.title = label || "อ่านออกเสียง";
   button.setAttribute("aria-label", label || "อ่านออกเสียง");
   button.textContent = "🔊";
@@ -1724,8 +1691,8 @@ function papa2TtsButton(text, label) {
 
 function papa2AddSpeechButtonToElement(element, text, label) {
   if (!element || !String(text ?? "").trim()) return;
-  if (element.querySelector(".papa2-speak-btn")) return;
-  element.appendChild(papa2TtsButton(text, label));
+  if (element.querySelector(".")) return;
+  element.appendChild(
 }
 
 function papa2StopSpeechOnQuizChange() {
@@ -1733,15 +1700,9 @@ function papa2StopSpeechOnQuizChange() {
 }
 
 window.addEventListener("beforeunload", papa2StopSpeech);
-window.speechSynthesis?.addEventListener?.("voiceschanged", () => {});
+window.?.addEventListener?.("voiceschanged", () => {});
 
 /* Public helper: can be called by the quiz renderer after it updates the DOM. */
-window.Papa2TTS = {
-  speak: papa2Speak,
-  stop: papa2StopSpeech,
-  addButton: papa2AddSpeechButtonToElement,
-  language: papa2TtsLanguage
-};
 /* ===== End Papa2 v2.8 TTS ===== */
 
 
@@ -1772,7 +1733,7 @@ function papa2DecorateCurrentQuestionTTS() {
 
     optionCandidates.forEach((el) => {
       if (el.closest("#historySummary")) return;
-      if (el.querySelector(".papa2-speak-btn")) return;
+      if (el.querySelector(".")) return;
 
       const raw = (el.dataset.papa2TtsText ||
         el.textContent.replace("🔊", "").trim());
@@ -1819,7 +1780,7 @@ document.addEventListener("click", (event) => {
   if (target && target.closest &&
       target.closest(".option, .choice, .answer-option, .quiz-option")) {
     // Do not cancel when the click itself is the speech button.
-    if (!target.closest(".papa2-speak-btn")) papa2StopSpeech();
+    if (!target.closest(".")) papa2StopSpeech();
   }
 }, true);
 
