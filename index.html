@@ -98,6 +98,52 @@ main{max-width:760px;margin:auto;padding:18px} .screen{display:none} .screen.act
 .score-badge { font-weight:800; }
 </style>
 
+
+<style id="papa2-tts-styles">
+  .papa2-speak-btn {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:34px;
+    height:34px;
+    margin-left:8px;
+    padding:0;
+    border:1px solid #cbd5e1;
+    border-radius:10px;
+    background:#fff;
+    color:#334155;
+    cursor:pointer;
+    font-size:17px;
+    vertical-align:middle;
+    transition:transform .08s ease, background .15s ease;
+  }
+  .papa2-speak-btn:hover { background:#f1f5f9; }
+  .papa2-speak-btn:active { transform:scale(.94); }
+  .papa2-speak-btn.speaking { background:#dbeafe; border-color:#93c5fd; }
+  .papa2-tts-stop {
+    margin-left:8px;
+    padding:7px 11px;
+    border:1px solid #cbd5e1;
+    border-radius:9px;
+    background:#fff;
+    cursor:pointer;
+  }
+  .papa2-question-text, .papa2-option-text {
+    display:inline;
+  }
+  .papa2-tts-toolbar {
+    display:flex;
+    align-items:center;
+    gap:6px;
+    margin:0 0 10px;
+    flex-wrap:wrap;
+  }
+  .papa2-tts-status {
+    font-size:12px;
+    color:#64748b;
+  }
+</style>
+
 </head>
 <body>
 <main>
@@ -925,7 +971,8 @@ async function startQuiz(){
  const questionCount=Math.min(20,pool.length);
  quizQuestions=shuffle([...pool]).slice(0,questionCount).map(q=>shuffleQuestionChoices(q));
  qi=0; score=0; quizAnswers=Array(questionCount).fill(-1); quizChecked=Array(questionCount).fill(false);
- startQuizTimer(); renderQuestion(); go('quiz');
+ startQuizTimer(); renderQuestion();
+ papa2DecorateCurrentQuestionTTS(); go('quiz');
 }
 function shuffle(arr){for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}return arr;}
 function startQuizTimer(){clearInterval(quizTimer);quizTimeLeft=3600;updateTimer();quizTimer=setInterval(()=>{quizTimeLeft--;updateTimer();if(quizTimeLeft<=0){clearInterval(quizTimer);finish(true);}},1000);}
@@ -1560,6 +1607,221 @@ window.Papa2History = {
   render: papa2RenderHistory,
   clearMine: papa2ClearMyHistory
 };
+
+
+/* Papa2 v2.7 — canonical JSON paths
+   ZIP structure:
+   questions/p3/p3_<subject>.json
+*/
+const PAPA2_JSON_PATHS = Object.freeze({
+  THAI: "questions/p3/p3_thai.json",
+  MATH: "questions/p3/p3_math.json",
+  SCI: "questions/p3/p3_science.json",
+  SOCIAL: "questions/p3/p3_social.json",
+  HISTORY: "questions/p3/p3_history.json",
+  ENGLISH: "questions/p3/p3_english.json",
+  WORK: "questions/p3/p3_work.json",
+  ART: "questions/p3/p3_art.json",
+  HEALTH: "questions/p3/p3_health.json"
+});
+
+function papa2JsonPath(subjectId) {
+  const key = String(subjectId || "").toUpperCase();
+  return PAPA2_JSON_PATHS[key] || null;
+}
+
+async function papa2LoadJsonBySubject(subjectId) {
+  const path = papa2JsonPath(subjectId);
+  if (!path) throw new Error("ไม่พบ path ของวิชา: " + subjectId);
+  const response = await fetch(path, { cache: "no-store" });
+  if (!response.ok) {
+    throw new Error(`โหลด ${path} ไม่สำเร็จ (HTTP ${response.status})`);
+  }
+  return await response.json();
+}
+
+
+/* ===== Papa2 v2.8 — Browser Text-to-Speech ===== */
+let papa2TtsCurrentButton = null;
+
+function papa2TtsLanguage() {
+  const subjectId = String(
+    (typeof subject !== "undefined" ? subject : "") ||
+    window.currentSubjectId || ""
+  ).toUpperCase();
+  return subjectId === "ENGLISH" ? "en-US" : "th-TH";
+}
+
+function papa2StopSpeech() {
+  if ("speechSynthesis" in window) {
+    window.speechSynthesis.cancel();
+  }
+  if (papa2TtsCurrentButton) {
+    papa2TtsCurrentButton.classList.remove("speaking");
+    papa2TtsCurrentButton = null;
+  }
+}
+
+function papa2Speak(text, button) {
+  if (!("speechSynthesis" in window)) {
+    alert("เบราว์เซอร์นี้ไม่รองรับการอ่านออกเสียง");
+    return;
+  }
+
+  const cleanText = String(text ?? "").trim();
+  if (!cleanText) return;
+
+  if (papa2TtsCurrentButton === button && window.speechSynthesis.speaking) {
+    papa2StopSpeech();
+    return;
+  }
+
+  papa2StopSpeech();
+
+  const utterance = new SpeechSynthesisUtterance(cleanText);
+  utterance.lang = papa2TtsLanguage();
+  utterance.rate = 0.9;
+  utterance.pitch = 1;
+  utterance.volume = 1;
+
+  const voices = window.speechSynthesis.getVoices();
+  const langPrefix = utterance.lang.toLowerCase().split("-")[0];
+  const preferredVoice =
+    voices.find(v => v.lang && v.lang.toLowerCase() === utterance.lang.toLowerCase()) ||
+    voices.find(v => v.lang && v.lang.toLowerCase().startsWith(langPrefix));
+
+  if (preferredVoice) utterance.voice = preferredVoice;
+
+  papa2TtsCurrentButton = button;
+  if (button) button.classList.add("speaking");
+
+  utterance.onend = () => {
+    if (button) button.classList.remove("speaking");
+    if (papa2TtsCurrentButton === button) papa2TtsCurrentButton = null;
+  };
+  utterance.onerror = () => {
+    if (button) button.classList.remove("speaking");
+    if (papa2TtsCurrentButton === button) papa2TtsCurrentButton = null;
+  };
+
+  window.speechSynthesis.speak(utterance);
+}
+
+function papa2TtsButton(text, label) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "papa2-speak-btn";
+  button.title = label || "อ่านออกเสียง";
+  button.setAttribute("aria-label", label || "อ่านออกเสียง");
+  button.textContent = "🔊";
+  button.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    papa2Speak(text, button);
+  });
+  return button;
+}
+
+function papa2AddSpeechButtonToElement(element, text, label) {
+  if (!element || !String(text ?? "").trim()) return;
+  if (element.querySelector(".papa2-speak-btn")) return;
+  element.appendChild(papa2TtsButton(text, label));
+}
+
+function papa2StopSpeechOnQuizChange() {
+  papa2StopSpeech();
+}
+
+window.addEventListener("beforeunload", papa2StopSpeech);
+window.speechSynthesis?.addEventListener?.("voiceschanged", () => {});
+
+/* Public helper: can be called by the quiz renderer after it updates the DOM. */
+window.Papa2TTS = {
+  speak: papa2Speak,
+  stop: papa2StopSpeech,
+  addButton: papa2AddSpeechButtonToElement,
+  language: papa2TtsLanguage
+};
+/* ===== End Papa2 v2.8 TTS ===== */
+
+
+function papa2DecorateCurrentQuestionTTS() {
+  try {
+    papa2StopSpeechOnQuizChange();
+
+    // Try several common selectors used by the existing renderer.
+    const questionCandidates = [
+      document.getElementById("questionText"),
+      document.getElementById("question"),
+      document.querySelector(".question-text"),
+      document.querySelector(".question")
+    ].filter(Boolean);
+
+    if (questionCandidates.length) {
+      const qEl = questionCandidates[0];
+      const raw = qEl.dataset.papa2TtsText || qEl.textContent.replace("🔊", "").trim();
+      if (raw) {
+        qEl.dataset.papa2TtsText = raw;
+        papa2AddSpeechButtonToElement(qEl, raw, "อ่านโจทย์");
+      }
+    }
+
+    const optionCandidates = document.querySelectorAll(
+      ".option, .choice, .answer-option, .quiz-option, label"
+    );
+
+    optionCandidates.forEach((el) => {
+      if (el.closest("#historySummary")) return;
+      if (el.querySelector(".papa2-speak-btn")) return;
+
+      const raw = (el.dataset.papa2TtsText ||
+        el.textContent.replace("🔊", "").trim());
+      if (!raw) return;
+
+      el.dataset.papa2TtsText = raw;
+      papa2AddSpeechButtonToElement(el, raw, "อ่านตัวเลือก");
+    });
+  } catch (error) {
+    console.warn("TTS decoration error:", error);
+  }
+}
+
+
+(function papa2InstallTtsObserver() {
+  const start = () => {
+    if (!document.body || window.__papa2TtsObserverInstalled) return;
+    window.__papa2TtsObserverInstalled = true;
+
+    let timer = null;
+    const observer = new MutationObserver(() => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        if (document.querySelector(".question-text, .question, #questionText, #question, .option, .choice, .answer-option, .quiz-option")) {
+          papa2DecorateCurrentQuestionTTS();
+        }
+      }, 60);
+    });
+
+    observer.observe(document.body, {childList:true, subtree:true});
+    setTimeout(papa2DecorateCurrentQuestionTTS, 100);
+  };
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", start, {once:true});
+  } else {
+    start();
+  }
+})();
+
+
+document.addEventListener("click", (event) => {
+  const target = event.target;
+  if (target && target.closest &&
+      target.closest(".option, .choice, .answer-option, .quiz-option")) {
+    // Do not cancel when the click itself is the speech button.
+    if (!target.closest(".papa2-speak-btn")) papa2StopSpeech();
+  }
+}, true);
 
 </script>
 </body></html>
